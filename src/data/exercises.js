@@ -1,0 +1,150 @@
+export const MUSCLE_GROUPS = {
+  chest: 'Pectoraux',
+  back: 'Dos',
+  shoulders: 'Épaules',
+  biceps: 'Biceps',
+  triceps: 'Triceps',
+  forearms: 'Avant-bras',
+  abs: 'Abdominaux',
+  obliques: 'Obliques',
+  quads: 'Quadriceps',
+  hamstrings: 'Ischio-jambiers',
+  glutes: 'Fessiers',
+  calves: 'Mollets',
+  traps: 'Trapèzes',
+  lats: 'Grand dorsal',
+  lower_back: 'Bas du dos',
+}
+
+export const SERIES_TYPES = [
+  { value: 'warmup', label: 'Échauffement' },
+  { value: 'normal', label: 'Normale' },
+  { value: 'dropset', label: 'Dropset' },
+  { value: 'degressive', label: 'Dégressive' },
+  { value: 'superset', label: 'Superset' },
+  { value: 'pyramid', label: 'Pyramidale' },
+  { value: 'failure', label: 'À l\'échec' },
+  { value: 'pause', label: 'Pause-repos' },
+]
+
+export const EXERCISES = [
+  // MUSCULATION - POITRINE
+  { id: 'bench_press', name: 'Développé couché barre', category: 'Musculation', muscles: ['chest', 'triceps', 'shoulders'], equipment: 'Barre' },
+  { id: 'incline_bench', name: 'Développé incliné barre', category: 'Musculation', muscles: ['chest', 'shoulders', 'triceps'], equipment: 'Barre' },
+  { id: 'decline_bench', name: 'Développé décliné barre', category: 'Musculation', muscles: ['chest', 'triceps'], equipment: 'Barre' },
+  { id: 'db_bench', name: 'Développé couché haltères', category: 'Musculation', muscles: ['chest', 'triceps', 'shoulders'], equipment: 'Haltères' },
+  { id: 'db_incline', name: 'Développé incliné haltères', category: 'Musculation', muscles: ['chest', 'shoulders'], equipment: 'Haltères' },
+  { id: 'db_flyes', name: 'Écarté haltères', category: 'Musculation', muscles: ['chest'], equipment: 'Haltères' },
+  { id: 'cable_crossover', name: 'Croisé poulie', category: 'Musculation', muscles: ['chest'], equipment: 'Machine' },
+  { id: 'pushup', name: 'Pompes', category: 'Musculation', muscles: ['chest', 'triceps', 'shoulders'], equipment: 'Poids de corps' },
+  { id: 'dips_chest', name: 'Dips (poitrine)', category: 'Musculation', muscles: ['chest', 'triceps'], equipment: 'Poids de corps' },
+  { id: 'pec_deck', name: 'Pec deck', category: 'Musculation', muscles: ['chest'], equipment: 'Machine' },
+  { id: 'chest_press_machine', name: 'Presse poitrine machine', category: 'Musculation', muscles: ['chest', 'triceps'], equipment: 'Machine' },
+
+  // MUSCULATION - DOS
+  { id: 'deadlift', name: 'Soulevé de terre', category: 'Musculation', muscles: ['back', 'glutes', 'hamstrings', 'traps', 'lower_back'], equipment: 'Barre' },
+  { id: 'pullup', name: 'Traction', category: 'Musculation', muscles: ['lats', 'biceps', 'back'], equipment: 'Poids de corps' },
+  { id: 'lat_pulldown', name: 'Tirage vertical', category: 'Musculation', muscles: ['lats', 'biceps', 'back'], equipment: 'Machine' },
+  { id: 'seated_row', name: 'Tirage horizontal assis', category: 'Musculation', muscles: ['back', 'biceps', 'lats'], equipment: 'Machine' },
+  { id: 'bent_row', name: 'Rowing barre', category: 'Musculation', muscles: ['back', 'lats', 'biceps', 'traps'], equipment: 'Barre' },
+  { id: 'db_row', name: 'Rowing haltère', category: 'Musculation', muscles: ['lats', 'back', 'biceps'], equipment: 'Haltères' },
+  { id: 'face_pull', name: 'Face pull', category: 'Musculation', muscles: ['shoulders', 'traps', 'back'], equipment: 'Machine' },
+  { id: 'hyperextension', name: 'Extensions lombaires', category: 'Musculation', muscles: ['lower_back', 'glutes', 'hamstrings'], equipment: 'Machine' },
+  { id: 'rack_pull', name: 'Rack pull', category: 'Musculation', muscles: ['back', 'traps', 'lower_back'], equipment: 'Barre' },
+  { id: 'cable_row', name: 'Tirage poulie basse', category: 'Musculation', muscles: ['back', 'lats', 'biceps'], equipment: 'Machine' },
+
+  // MUSCULATION - ÉPAULES
+  { id: 'ohp', name: 'Développé militaire', category: 'Musculation', muscles: ['shoulders', 'triceps', 'traps'], equipment: 'Barre' },
+  { id: 'db_press', name: 'Développé épaules haltères', category: 'Musculation', muscles: ['shoulders', 'triceps'], equipment: 'Haltères' },
+  { id: 'lateral_raise', name: 'Élévations latérales', category: 'Musculation', muscles: ['shoulders'], equipment: 'Haltères' },
+  { id: 'front_raise', name: 'Élévations frontales', category: 'Musculation', muscles: ['shoulders'], equipment: 'Haltères' },
+  { id: 'rear_delt', name: 'Oiseau (deltoïde postérieur)', category: 'Musculation', muscles: ['shoulders', 'back'], equipment: 'Haltères' },
+  { id: 'shrugs', name: 'Haussements d\'épaules', category: 'Musculation', muscles: ['traps'], equipment: 'Haltères' },
+  { id: 'arnold_press', name: 'Arnold press', category: 'Musculation', muscles: ['shoulders', 'triceps'], equipment: 'Haltères' },
+  { id: 'upright_row', name: 'Tirage menton', category: 'Musculation', muscles: ['shoulders', 'traps'], equipment: 'Barre' },
+
+  // MUSCULATION - BRAS
+  { id: 'barbell_curl', name: 'Curl barre', category: 'Musculation', muscles: ['biceps', 'forearms'], equipment: 'Barre' },
+  { id: 'db_curl', name: 'Curl haltères', category: 'Musculation', muscles: ['biceps'], equipment: 'Haltères' },
+  { id: 'hammer_curl', name: 'Curl marteau', category: 'Musculation', muscles: ['biceps', 'forearms'], equipment: 'Haltères' },
+  { id: 'preacher_curl', name: 'Curl pupitre', category: 'Musculation', muscles: ['biceps'], equipment: 'Machine' },
+  { id: 'cable_curl', name: 'Curl poulie', category: 'Musculation', muscles: ['biceps'], equipment: 'Machine' },
+  { id: 'skullcrusher', name: 'Barre au front', category: 'Musculation', muscles: ['triceps'], equipment: 'Barre' },
+  { id: 'tricep_pushdown', name: 'Extension triceps poulie', category: 'Musculation', muscles: ['triceps'], equipment: 'Machine' },
+  { id: 'overhead_tricep', name: 'Extension triceps overhead', category: 'Musculation', muscles: ['triceps'], equipment: 'Haltères' },
+  { id: 'dips_tricep', name: 'Dips (triceps)', category: 'Musculation', muscles: ['triceps', 'chest'], equipment: 'Poids de corps' },
+  { id: 'wrist_curl', name: 'Curl poignet', category: 'Musculation', muscles: ['forearms'], equipment: 'Haltères' },
+
+  // MUSCULATION - JAMBES
+  { id: 'squat', name: 'Squat barre', category: 'Musculation', muscles: ['quads', 'glutes', 'hamstrings', 'lower_back'], equipment: 'Barre' },
+  { id: 'front_squat', name: 'Squat avant', category: 'Musculation', muscles: ['quads', 'glutes'], equipment: 'Barre' },
+  { id: 'leg_press', name: 'Presse à cuisses', category: 'Musculation', muscles: ['quads', 'glutes', 'hamstrings'], equipment: 'Machine' },
+  { id: 'leg_extension', name: 'Extension jambes', category: 'Musculation', muscles: ['quads'], equipment: 'Machine' },
+  { id: 'leg_curl', name: 'Curl jambes', category: 'Musculation', muscles: ['hamstrings'], equipment: 'Machine' },
+  { id: 'rdl', name: 'Soulevé de terre roumain', category: 'Musculation', muscles: ['hamstrings', 'glutes', 'lower_back'], equipment: 'Barre' },
+  { id: 'lunges', name: 'Fentes', category: 'Musculation', muscles: ['quads', 'glutes', 'hamstrings'], equipment: 'Poids de corps' },
+  { id: 'bulgarian_squat', name: 'Squat bulgare', category: 'Musculation', muscles: ['quads', 'glutes'], equipment: 'Haltères' },
+  { id: 'hip_thrust', name: 'Hip thrust', category: 'Musculation', muscles: ['glutes', 'hamstrings'], equipment: 'Barre' },
+  { id: 'calf_raise', name: 'Extension mollets', category: 'Musculation', muscles: ['calves'], equipment: 'Machine' },
+  { id: 'goblet_squat', name: 'Goblet squat', category: 'Musculation', muscles: ['quads', 'glutes'], equipment: 'Haltères' },
+  { id: 'sumo_squat', name: 'Squat sumo', category: 'Musculation', muscles: ['quads', 'glutes', 'hamstrings'], equipment: 'Barre' },
+
+  // MUSCULATION - ABDOS
+  { id: 'crunch', name: 'Crunch', category: 'Musculation', muscles: ['abs'], equipment: 'Poids de corps' },
+  { id: 'plank', name: 'Gainage', category: 'Musculation', muscles: ['abs', 'lower_back'], equipment: 'Poids de corps' },
+  { id: 'leg_raise', name: 'Relevés de jambes', category: 'Musculation', muscles: ['abs'], equipment: 'Poids de corps' },
+  { id: 'russian_twist', name: 'Russian twist', category: 'Musculation', muscles: ['abs', 'obliques'], equipment: 'Poids de corps' },
+  { id: 'ab_wheel', name: 'Roue abdominale', category: 'Musculation', muscles: ['abs', 'lower_back'], equipment: 'Accessoire' },
+  { id: 'cable_crunch', name: 'Crunch poulie', category: 'Musculation', muscles: ['abs'], equipment: 'Machine' },
+  { id: 'mountain_climber', name: 'Mountain climber', category: 'Musculation', muscles: ['abs', 'shoulders'], equipment: 'Poids de corps' },
+  { id: 'side_plank', name: 'Gainage latéral', category: 'Musculation', muscles: ['obliques', 'abs'], equipment: 'Poids de corps' },
+
+  // HALTÉROPHILIE
+  { id: 'clean', name: 'Épaulé', category: 'Haltérophilie', muscles: ['back', 'shoulders', 'quads', 'glutes', 'traps'], equipment: 'Barre' },
+  { id: 'snatch', name: 'Arraché', category: 'Haltérophilie', muscles: ['back', 'shoulders', 'quads', 'glutes', 'traps'], equipment: 'Barre' },
+  { id: 'clean_jerk', name: 'Épaulé-jeté', category: 'Haltérophilie', muscles: ['back', 'shoulders', 'quads', 'glutes', 'traps'], equipment: 'Barre' },
+  { id: 'hang_clean', name: 'Épaulé suspendu', category: 'Haltérophilie', muscles: ['back', 'shoulders', 'quads', 'traps'], equipment: 'Barre' },
+  { id: 'power_clean', name: 'Power clean', category: 'Haltérophilie', muscles: ['back', 'shoulders', 'quads', 'traps'], equipment: 'Barre' },
+  { id: 'push_press', name: 'Push press', category: 'Haltérophilie', muscles: ['shoulders', 'triceps', 'quads'], equipment: 'Barre' },
+  { id: 'push_jerk', name: 'Push jerk', category: 'Haltérophilie', muscles: ['shoulders', 'triceps', 'quads'], equipment: 'Barre' },
+
+  // CROSSFIT
+  { id: 'burpee', name: 'Burpee', category: 'CrossFit', muscles: ['chest', 'shoulders', 'quads', 'abs'], equipment: 'Poids de corps' },
+  { id: 'box_jump', name: 'Saut sur box', category: 'CrossFit', muscles: ['quads', 'glutes', 'calves'], equipment: 'Box' },
+  { id: 'wall_ball', name: 'Wall ball', category: 'CrossFit', muscles: ['quads', 'shoulders', 'abs'], equipment: 'Médecine-ball' },
+  { id: 'kettlebell_swing', name: 'Kettlebell swing', category: 'CrossFit', muscles: ['glutes', 'hamstrings', 'back', 'shoulders'], equipment: 'Kettlebell' },
+  { id: 'thruster', name: 'Thruster', category: 'CrossFit', muscles: ['quads', 'shoulders', 'triceps', 'glutes'], equipment: 'Barre' },
+  { id: 'muscle_up', name: 'Muscle up', category: 'CrossFit', muscles: ['back', 'chest', 'triceps', 'biceps'], equipment: 'Anneaux' },
+  { id: 'double_under', name: 'Double-under', category: 'CrossFit', muscles: ['calves', 'abs'], equipment: 'Corde à sauter' },
+  { id: 'toes_to_bar', name: 'Toes to bar', category: 'CrossFit', muscles: ['abs', 'lats'], equipment: 'Barre' },
+  { id: 'handstand_pushup', name: 'Pompe en équilibre', category: 'CrossFit', muscles: ['shoulders', 'triceps', 'abs'], equipment: 'Poids de corps' },
+  { id: 'rowing_machine', name: 'Rameur', category: 'CrossFit', muscles: ['back', 'lats', 'biceps', 'quads'], equipment: 'Machine' },
+  { id: 'air_squat', name: 'Air squat', category: 'CrossFit', muscles: ['quads', 'glutes'], equipment: 'Poids de corps' },
+  { id: 'kb_goblet', name: 'Goblet squat kettlebell', category: 'CrossFit', muscles: ['quads', 'glutes', 'abs'], equipment: 'Kettlebell' },
+  { id: 'ring_dip', name: 'Dips aux anneaux', category: 'CrossFit', muscles: ['chest', 'triceps', 'shoulders'], equipment: 'Anneaux' },
+  { id: 'ghd_situp', name: 'GHD sit-up', category: 'CrossFit', muscles: ['abs', 'quads'], equipment: 'Machine' },
+
+  // CARDIO
+  { id: 'run', name: 'Course à pied', category: 'Cardio', muscles: ['quads', 'hamstrings', 'calves', 'glutes'], equipment: 'Aucun' },
+  { id: 'bike', name: 'Vélo', category: 'Cardio', muscles: ['quads', 'hamstrings', 'calves', 'glutes'], equipment: 'Vélo' },
+  { id: 'elliptical', name: 'Elliptique', category: 'Cardio', muscles: ['quads', 'hamstrings', 'calves', 'glutes'], equipment: 'Machine' },
+  { id: 'treadmill', name: 'Tapis de course', category: 'Cardio', muscles: ['quads', 'hamstrings', 'calves'], equipment: 'Machine' },
+  { id: 'jump_rope', name: 'Corde à sauter', category: 'Cardio', muscles: ['calves', 'shoulders', 'abs'], equipment: 'Corde' },
+  { id: 'swim', name: 'Natation', category: 'Cardio', muscles: ['back', 'shoulders', 'chest', 'lats'], equipment: 'Aucun' },
+  { id: 'hiit', name: 'HIIT', category: 'Cardio', muscles: ['quads', 'abs', 'shoulders'], equipment: 'Aucun' },
+  { id: 'stair_climber', name: 'Stepper', category: 'Cardio', muscles: ['quads', 'glutes', 'calves'], equipment: 'Machine' },
+
+  // ÉTIREMENTS
+  { id: 'hamstring_stretch', name: 'Étirement ischio-jambiers', category: 'Étirements', muscles: ['hamstrings'], equipment: 'Aucun' },
+  { id: 'quad_stretch', name: 'Étirement quadriceps', category: 'Étirements', muscles: ['quads'], equipment: 'Aucun' },
+  { id: 'chest_stretch', name: 'Étirement pectoraux', category: 'Étirements', muscles: ['chest', 'shoulders'], equipment: 'Aucun' },
+  { id: 'shoulder_stretch', name: 'Étirement épaules', category: 'Étirements', muscles: ['shoulders'], equipment: 'Aucun' },
+  { id: 'hip_flexor', name: 'Étirement fléchisseurs hanche', category: 'Étirements', muscles: ['quads', 'glutes'], equipment: 'Aucun' },
+  { id: 'back_stretch', name: 'Étirement dos', category: 'Étirements', muscles: ['back', 'lower_back'], equipment: 'Aucun' },
+  { id: 'calf_stretch', name: 'Étirement mollets', category: 'Étirements', muscles: ['calves'], equipment: 'Aucun' },
+  { id: 'pigeon_pose', name: 'Posture du pigeon', category: 'Étirements', muscles: ['glutes', 'quads'], equipment: 'Aucun' },
+  { id: 'cat_cow', name: 'Chat-vache', category: 'Étirements', muscles: ['back', 'abs'], equipment: 'Aucun' },
+  { id: 'child_pose', name: 'Posture de l\'enfant', category: 'Étirements', muscles: ['back', 'lats', 'lower_back'], equipment: 'Aucun' },
+]
+
+export const EXERCISE_CATEGORIES = [...new Set(EXERCISES.map(e => e.category))]

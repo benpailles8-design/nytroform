@@ -1,0 +1,58 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
+import CreateSession from './pages/CreateSession'
+import SessionDetail from './pages/SessionDetail'
+import Profile from './pages/Profile'
+import Messages from './pages/Messages'
+import Clients from './pages/Clients'
+import Navbar from './components/Navbar'
+
+function ProtectedRoute({ children, coachOnly = false }) {
+  const { user, profile, loading, isCoach } = useAuth()
+  if (loading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ fontFamily: 'Bebas Neue', fontSize: '48px', color: 'var(--accent)' }}>NYTROFORM</div>
+      <div style={{ color: 'var(--text2)', fontSize: '13px' }}>Chargement...</div>
+    </div>
+  )
+  if (!user) return <Navigate to="/login" />
+  if (coachOnly && !isCoach) return <Navigate to="/dashboard" />
+  return children
+}
+
+function AppLayout({ children }) {
+  return (
+    <>
+      {children}
+      <Navbar />
+    </>
+  )
+}
+
+function AppRoutes() {
+  const { user } = useAuth()
+  return (
+    <Routes>
+      <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
+      <Route path="/dashboard" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
+      <Route path="/create-session" element={<ProtectedRoute coachOnly><AppLayout><CreateSession /></AppLayout></ProtectedRoute>} />
+      <Route path="/session/:id" element={<ProtectedRoute><AppLayout><SessionDetail /></AppLayout></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><AppLayout><Profile /></AppLayout></ProtectedRoute>} />
+      <Route path="/messages" element={<ProtectedRoute><AppLayout><Messages /></AppLayout></ProtectedRoute>} />
+      <Route path="/clients" element={<ProtectedRoute coachOnly><AppLayout><Clients /></AppLayout></ProtectedRoute>} />
+      <Route path="*" element={<Navigate to="/dashboard" />} />
+    </Routes>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
+  )
+}
