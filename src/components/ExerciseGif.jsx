@@ -1,135 +1,146 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { X } from 'lucide-react'
 import BodySVG from './BodySVG'
 import { MUSCLE_GROUPS } from '../data/exercises'
 
-// Noms des exercices en anglais pour matcher l'API ExerciseDB
-const EXERCISE_NAMES_EN = {
-  bench_press: 'barbell bench press',
-  incline_bench: 'barbell incline bench press',
-  decline_bench: 'barbell decline bench press',
-  db_bench: 'dumbbell bench press',
-  db_incline: 'dumbbell incline bench press',
-  db_flyes: 'dumbbell flyes',
-  cable_crossover: 'cable crossover',
-  pushup: 'push-up',
-  dips_chest: 'chest dip',
-  pec_deck: 'pec deck fly',
-  chest_press_machine: 'chest press',
-  deadlift: 'barbell deadlift',
-  pullup: 'pull-up',
-  lat_pulldown: 'cable lat pulldown',
-  seated_row: 'cable seated row',
-  bent_row: 'barbell bent over row',
-  db_row: 'dumbbell bent over row',
-  face_pull: 'cable face pull',
-  hyperextension: 'hyperextensions',
-  rack_pull: 'rack pull',
-  cable_row: 'cable seated row',
-  ohp: 'barbell overhead press',
-  db_press: 'dumbbell shoulder press',
-  lateral_raise: 'dumbbell lateral raise',
-  front_raise: 'dumbbell front raise',
-  rear_delt: 'rear delt fly',
-  shrugs: 'barbell shrug',
-  arnold_press: 'arnold press',
-  upright_row: 'barbell upright row',
-  barbell_curl: 'barbell curl',
-  db_curl: 'dumbbell bicep curl',
-  hammer_curl: 'hammer curl',
-  preacher_curl: 'preacher curl',
-  cable_curl: 'cable curl',
-  skullcrusher: 'skull crusher',
-  tricep_pushdown: 'triceps pushdown',
-  overhead_tricep: 'dumbbell triceps extension',
-  dips_tricep: 'triceps dip',
-  wrist_curl: 'wrist curl',
-  squat: 'barbell squat',
-  front_squat: 'barbell front squat',
-  leg_press: 'leg press',
-  leg_extension: 'leg extension',
-  leg_curl: 'lying leg curl',
-  rdl: 'romanian deadlift',
-  lunges: 'barbell lunge',
-  bulgarian_squat: 'bulgarian split squat',
-  hip_thrust: 'barbell hip thrust',
-  calf_raise: 'standing calf raise',
-  goblet_squat: 'dumbbell goblet squat',
-  sumo_squat: 'sumo squat',
-  crunch: 'crunch',
-  plank: 'plank',
-  leg_raise: 'hanging leg raise',
-  russian_twist: 'russian twist',
-  ab_wheel: 'ab wheel rollout',
-  cable_crunch: 'cable crunch',
-  mountain_climber: 'mountain climber',
-  side_plank: 'side plank',
-  burpee: 'burpee',
-  box_jump: 'box jump',
-  kettlebell_swing: 'kettlebell swing',
-  thruster: 'barbell thruster',
-  clean: 'power clean',
-  snatch: 'snatch',
-  push_press: 'push press',
-  push_jerk: 'push jerk',
-  wall_ball: 'wall ball',
-  muscle_up: 'muscle up',
-  toes_to_bar: 'toes to bar',
-  rowing_machine: 'rowing',
-  air_squat: 'air squat',
-  kb_goblet: 'kettlebell goblet squat',
-  ring_dip: 'ring dip',
-  ghd_situp: 'sit-up',
-  double_under: 'jump rope',
-  handstand_pushup: 'handstand push up',
-  run: 'run',
-  jump_rope: 'jump rope',
+// GIFs depuis free-exercise-db (GitHub Pages) - open source, domaine public
+// https://github.com/yuhonas/free-exercise-db
+const BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises'
+
+const GIF_URLS = {
+  // POITRINE
+  bench_press:         `${BASE}/Barbell_Bench_Press_-_Medium_Grip/images/0.jpg`,
+  incline_bench:       `${BASE}/Barbell_Incline_Bench_Press_-_Medium_Grip/images/0.jpg`,
+  decline_bench:       `${BASE}/Barbell_Decline_Bench_Press/images/0.jpg`,
+  db_bench:            `${BASE}/Dumbbell_Bench_Press/images/0.jpg`,
+  db_incline:          `${BASE}/Dumbbell_Incline_Bench_Press/images/0.jpg`,
+  db_flyes:            `${BASE}/Dumbbell_Flyes/images/0.jpg`,
+  cable_crossover:     `${BASE}/Cable_Crossover/images/0.jpg`,
+  pushup:              `${BASE}/Pushups/images/0.jpg`,
+  dips_chest:          `${BASE}/Dips_-_Chest_Version/images/0.jpg`,
+  pec_deck:            `${BASE}/Pec_Deck_Fly/images/0.jpg`,
+  chest_press_machine: `${BASE}/Barbell_Bench_Press_-_Medium_Grip/images/0.jpg`,
+
+  // DOS
+  deadlift:            `${BASE}/Barbell_Deadlift/images/0.jpg`,
+  pullup:              `${BASE}/Pullups/images/0.jpg`,
+  lat_pulldown:        `${BASE}/Wide-Grip_Lat_Pulldown/images/0.jpg`,
+  seated_row:          `${BASE}/Seated_Cable_Rows/images/0.jpg`,
+  bent_row:            `${BASE}/Barbell_Bent_Over_Row/images/0.jpg`,
+  db_row:              `${BASE}/Dumbbell_Bent_Over_Row/images/0.jpg`,
+  face_pull:           `${BASE}/Face_Pull/images/0.jpg`,
+  hyperextension:      `${BASE}/Hyperextensions_With_No_Hyperextension_Bench/images/0.jpg`,
+  rack_pull:           `${BASE}/Rack_Pull/images/0.jpg`,
+  cable_row:           `${BASE}/Seated_Cable_Rows/images/0.jpg`,
+
+  // ÉPAULES
+  ohp:                 `${BASE}/Barbell_Shoulder_Press/images/0.jpg`,
+  db_press:            `${BASE}/Dumbbell_Shoulder_Press/images/0.jpg`,
+  lateral_raise:       `${BASE}/Side_Lateral_Raise/images/0.jpg`,
+  front_raise:         `${BASE}/Dumbbell_Alternate_Front_Raise/images/0.jpg`,
+  rear_delt:           `${BASE}/Seated_Bent-Over_Rear_Delt_Raise/images/0.jpg`,
+  shrugs:              `${BASE}/Barbell_Shrug/images/0.jpg`,
+  arnold_press:        `${BASE}/Arnold_Dumbbell_Press/images/0.jpg`,
+  upright_row:         `${BASE}/Barbell_Upright_Row/images/0.jpg`,
+
+  // BICEPS
+  barbell_curl:        `${BASE}/Barbell_Curl/images/0.jpg`,
+  db_curl:             `${BASE}/Dumbbell_Bicep_Curl/images/0.jpg`,
+  hammer_curl:         `${BASE}/Hammer_Curls/images/0.jpg`,
+  preacher_curl:       `${BASE}/Preacher_Curl/images/0.jpg`,
+  cable_curl:          `${BASE}/Cable_Curl/images/0.jpg`,
+
+  // TRICEPS
+  skullcrusher:        `${BASE}/Barbell_Skullcrusher/images/0.jpg`,
+  tricep_pushdown:     `${BASE}/Triceps_Pushdown/images/0.jpg`,
+  overhead_tricep:     `${BASE}/Dumbbell_One_Arm_Triceps_Extension/images/0.jpg`,
+  dips_tricep:         `${BASE}/Dips_-_Triceps_Version/images/0.jpg`,
+  wrist_curl:          `${BASE}/Palms_Up_Barbell_Wrist_Curl_Over_A_Bench/images/0.jpg`,
+
+  // JAMBES
+  squat:               `${BASE}/Barbell_Full_Squat/images/0.jpg`,
+  front_squat:         `${BASE}/Barbell_Front_Squat/images/0.jpg`,
+  leg_press:           `${BASE}/Leg_Press/images/0.jpg`,
+  leg_extension:       `${BASE}/Leg_Extensions/images/0.jpg`,
+  leg_curl:            `${BASE}/Lying_Leg_Curls/images/0.jpg`,
+  rdl:                 `${BASE}/Romanian_Deadlift/images/0.jpg`,
+  lunges:              `${BASE}/Barbell_Lunge/images/0.jpg`,
+  bulgarian_squat:     `${BASE}/Barbell_Bulgarian_Split_Squat/images/0.jpg`,
+  hip_thrust:          `${BASE}/Barbell_Hip_Thrust/images/0.jpg`,
+  calf_raise:          `${BASE}/Standing_Calf_Raises/images/0.jpg`,
+  goblet_squat:        `${BASE}/Dumbbell_Goblet_Squat/images/0.jpg`,
+  sumo_squat:          `${BASE}/Sumo_Squat/images/0.jpg`,
+
+  // ABDOS
+  crunch:              `${BASE}/Crunch/images/0.jpg`,
+  plank:               `${BASE}/Plank/images/0.jpg`,
+  leg_raise:           `${BASE}/Flat_Bench_Lying_Leg_Raise/images/0.jpg`,
+  russian_twist:       `${BASE}/Russian_Twist/images/0.jpg`,
+  ab_wheel:            `${BASE}/Ab_Wheel_Rollout/images/0.jpg`,
+  cable_crunch:        `${BASE}/Cable_Crunch/images/0.jpg`,
+  mountain_climber:    `${BASE}/Mountain_Climbers/images/0.jpg`,
+  side_plank:          `${BASE}/Side_Plank/images/0.jpg`,
+
+  // HALTÉROPHILIE / CROSSFIT
+  clean:               `${BASE}/Power_Clean/images/0.jpg`,
+  snatch:              `${BASE}/Snatch/images/0.jpg`,
+  clean_jerk:          `${BASE}/Clean_and_Jerk/images/0.jpg`,
+  hang_clean:          `${BASE}/Hang_Power_Clean/images/0.jpg`,
+  power_clean:         `${BASE}/Power_Clean/images/0.jpg`,
+  push_press:          `${BASE}/Push_Press/images/0.jpg`,
+  push_jerk:           `${BASE}/Push_Press/images/0.jpg`,
+  burpee:              `${BASE}/Burpees/images/0.jpg`,
+  box_jump:            `${BASE}/Box_Jump_(Multiple_Response)/images/0.jpg`,
+  kettlebell_swing:    `${BASE}/Kettlebell_Swing/images/0.jpg`,
+  thruster:            `${BASE}/Barbell_Thruster/images/0.jpg`,
+  wall_ball:           `${BASE}/Wall_Ball/images/0.jpg`,
+  muscle_up:           `${BASE}/Muscle_Up/images/0.jpg`,
+  toes_to_bar:         `${BASE}/Hanging_Leg_Raise/images/0.jpg`,
+  rowing_machine:      `${BASE}/Rowing,_Seated/images/0.jpg`,
+  air_squat:           `${BASE}/Barbell_Full_Squat/images/0.jpg`,
+  kb_goblet:           `${BASE}/Dumbbell_Goblet_Squat/images/0.jpg`,
+  ring_dip:            `${BASE}/Dips_-_Triceps_Version/images/0.jpg`,
+  ghd_situp:           `${BASE}/Sit-Up/images/0.jpg`,
+  double_under:        `${BASE}/Jump_Rope/images/0.jpg`,
+  handstand_pushup:    `${BASE}/Handstand_Push-up/images/0.jpg`,
+  jump_rope:           `${BASE}/Jump_Rope/images/0.jpg`,
+  run:                 `${BASE}/Running,_Treadmill/images/0.jpg`,
+  bike:                `${BASE}/Stationary_Bike_Run,_Cross_Trainer/images/0.jpg`,
+
+  // ÉTIREMENTS
+  hamstring_stretch:   `${BASE}/Standing_Hamstring_Stretch/images/0.jpg`,
+  quad_stretch:        `${BASE}/Standing_Quadriceps_Stretch/images/0.jpg`,
+  hip_flexor:          `${BASE}/Hip_Flexor_Stretch/images/0.jpg`,
+  child_pose:          `${BASE}/Child's_Pose/images/0.jpg`,
+  cat_cow:             `${BASE}/Cat_Stretch/images/0.jpg`,
 }
 
-const cache = {}
-
 export default function ExerciseGif({ exerciseId, exerciseName, muscles = [], size = 80, clickable = false }) {
-  const [gifUrl, setGifUrl] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [imgOk, setImgOk] = useState(true)
   const [showModal, setShowModal] = useState(false)
 
-  useEffect(() => {
-    if (!exerciseId) { setLoading(false); return }
-    if (cache[exerciseId]) { setGifUrl(cache[exerciseId]); setLoading(false); return }
-
-    const name = EXERCISE_NAMES_EN[exerciseId]
-    if (!name) { setLoading(false); return }
-
-    // ExerciseDB public API - gratuite sans clé pour usage limité
-    fetch(`https://exercisedb-api.vercel.app/api/v1/exercises/name/${encodeURIComponent(name)}?limit=1`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        const exercises = data?.exercises || data
-        const gif = Array.isArray(exercises) ? exercises[0]?.gifUrl : null
-        if (gif) { cache[exerciseId] = gif; setGifUrl(gif) }
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [exerciseId])
-
-  if (loading) return (
-    <div style={{ width: size, height: size, borderRadius: 8, background: 'var(--bg3)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <div style={{ width: 14, height: 14, border: '2px solid var(--accent)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-    </div>
-  )
-
-  if (!gifUrl) return null
+  const gifUrl = GIF_URLS[exerciseId]
+  if (!gifUrl || !imgOk) return null
 
   return (
     <>
-      <div onClick={() => clickable && setShowModal(true)} style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default', flexShrink: 0 }}>
-        <img src={gifUrl} alt={exerciseName} style={{ width: size, height: size, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', display: 'block', background: 'var(--bg3)' }} />
+      <div
+        onClick={() => clickable && setShowModal(true)}
+        style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default', flexShrink: 0 }}
+      >
+        <img
+          src={gifUrl}
+          alt={exerciseName}
+          onError={() => setImgOk(false)}
+          style={{ width: size, height: size, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', display: 'block', background: 'var(--bg3)' }}
+        />
         {clickable && (
-          <div style={{ position: 'absolute', inset: 0, borderRadius: 8, background: 'rgba(0,0,0,0.35)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.2s' }}
+          <div
+            style={{ position: 'absolute', inset: 0, borderRadius: 8, background: 'rgba(0,0,0,0.4)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.2s' }}
             onMouseEnter={e => e.currentTarget.style.opacity = '1'}
             onMouseLeave={e => e.currentTarget.style.opacity = '0'}
           >
-            <span style={{ fontSize: 20 }}>🔍</span>
+            <span style={{ fontSize: 22 }}>🔍</span>
           </div>
         )}
       </div>
@@ -141,7 +152,11 @@ export default function ExerciseGif({ exerciseId, exerciseName, muscles = [], si
           </button>
           <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 400, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
             <h2 style={{ fontFamily: 'Bebas Neue', fontSize: 32, textAlign: 'center' }}>{exerciseName}</h2>
-            <img src={gifUrl} alt={exerciseName} style={{ width: '100%', maxWidth: 320, borderRadius: 16, border: '1px solid var(--border)', background: 'var(--bg3)' }} />
+            <img
+              src={gifUrl}
+              alt={exerciseName}
+              style={{ width: '100%', maxWidth: 320, borderRadius: 16, border: '1px solid var(--border)', background: 'var(--bg3)' }}
+            />
             {muscles.length > 0 && (
               <div className="card" style={{ width: '100%', padding: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
                 <BodySVG activeMuscles={muscles} size={70} showBoth={true} />
