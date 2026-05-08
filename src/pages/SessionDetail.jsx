@@ -6,7 +6,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, Dumbbell, History } from 'lucide-rea
 import BodySVG from '../components/BodySVG'
 import RestTimer from '../components/RestTimer'
 import { MUSCLE_GROUPS, SERIES_TYPES } from '../data/exercises'
-import { getExerciseGif } from '../data/exerciseGifs'
+import ExerciseGif from '../components/ExerciseGif'
 
 export default function SessionDetail() {
   const { id } = useParams()
@@ -155,10 +155,7 @@ export default function SessionDetail() {
               style={{ padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}
             >
               <div style={{ flexShrink: 0 }}>
-                {getExerciseGif(block.exercise.id)
-                  ? <img src={getExerciseGif(block.exercise.id)} alt={block.exercise.name} style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)' }} onError={e => e.target.style.display='none'} />
-                  : <BodySVG activeMuscles={block.exercise.muscles} size={48} />
-                }
+                <ExerciseGif exerciseId={block.exercise.id} exerciseName={block.exercise.name} size={56} />
               </div>
               <div style={{ flex: 1 }}>
                 <p style={{ fontFamily: 'Bebas Neue', fontSize: '20px' }}>{block.exercise.name}</p>
@@ -172,6 +169,13 @@ export default function SessionDetail() {
             {/* Détail séries */}
             {expandedBlock === blockIdx && (
               <div style={{ borderTop: '1px solid var(--border)', padding: '16px' }}>
+                {/* GIF + muscles */}
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px', padding: '12px', background: 'var(--bg3)', borderRadius: '10px' }}>
+                  <ExerciseGif exerciseId={block.exercise.id} exerciseName={block.exercise.name} size={100} />
+                  <div style={{ flex: 1 }}>
+                    <BodySVG activeMuscles={block.exercise.muscles} size={60} showBoth={true} />
+                  </div>
+                </div>
                 {/* Headers */}
                 <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 80px 80px', gap: '8px', marginBottom: '10px' }}>
                   <span style={{ fontSize: '10px', color: 'var(--text2)', textTransform: 'uppercase' }}>#</span>
