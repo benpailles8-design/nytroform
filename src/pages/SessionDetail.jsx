@@ -155,7 +155,7 @@ export default function SessionDetail() {
               style={{ padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}
             >
               <div style={{ flexShrink: 0 }}>
-                <ExerciseGif exerciseId={block.exercise.id} exerciseName={block.exercise.name} size={56} />
+                <ExerciseGif exerciseId={block.exercise.id} exerciseName={block.exercise.name} muscles={block.exercise.muscles} size={56} clickable={true} />
               </div>
               <div style={{ flex: 1 }}>
                 <p style={{ fontFamily: 'Bebas Neue', fontSize: '20px' }}>{block.exercise.name}</p>
@@ -171,7 +171,7 @@ export default function SessionDetail() {
               <div style={{ borderTop: '1px solid var(--border)', padding: '16px' }}>
                 {/* GIF + muscles */}
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px', padding: '12px', background: 'var(--bg3)', borderRadius: '10px' }}>
-                  <ExerciseGif exerciseId={block.exercise.id} exerciseName={block.exercise.name} size={100} />
+                  <ExerciseGif exerciseId={block.exercise.id} exerciseName={block.exercise.name} muscles={block.exercise.muscles} size={100} clickable={true} />
                   <div style={{ flex: 1 }}>
                     <BodySVG activeMuscles={block.exercise.muscles} size={60} showBoth={true} />
                   </div>
