@@ -67,7 +67,7 @@ export default function Schedule() {
     const session = sessions.find(s => s.id === form.session_id)
     const client = clients.find(c => c.id === (form.client_id || session?.client_id))
 
-    await supabase.from('schedule_events').insert({
+    const { data: inserted, error: insertError } = await supabase.from('schedule_events').insert({
       coach_id: user.id,
       client_id: form.client_id || session?.client_id,
       client_name: client?.full_name,
@@ -77,8 +77,9 @@ export default function Schedule() {
       hour: form.hour,
       duration: form.duration,
       note: form.note
-    })
+    }).select()
 
+    if (insertError) { alert('Erreur: ' + insertError.message); setSaving(false); return }
     setShowForm(null)
     setForm({ session_id: '', client_id: '', hour: 9, duration: 60, note: '' })
     fetchAll()
