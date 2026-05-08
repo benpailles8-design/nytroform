@@ -7,6 +7,7 @@ import SessionDetail from './pages/SessionDetail'
 import Profile from './pages/Profile'
 import Messages from './pages/Messages'
 import Clients from './pages/Clients'
+import ClientProfile from './pages/ClientProfile'
 import Schedule from './pages/Schedule'
 import Navbar from './components/Navbar'
 
@@ -38,6 +39,7 @@ function AppRoutes() {
       <Route path="/profile" element={<ProtectedRoute><AppLayout><Profile /></AppLayout></ProtectedRoute>} />
       <Route path="/messages" element={<ProtectedRoute><AppLayout><Messages /></AppLayout></ProtectedRoute>} />
       <Route path="/clients" element={<ProtectedRoute coachOnly><AppLayout><Clients /></AppLayout></ProtectedRoute>} />
+      <Route path="/client/:clientId" element={<ProtectedRoute coachOnly><AppLayout><ClientProfile /></AppLayout></ProtectedRoute>} />
       <Route path="/schedule" element={<ProtectedRoute><AppLayout><Schedule /></AppLayout></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
