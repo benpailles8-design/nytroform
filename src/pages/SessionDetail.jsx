@@ -6,6 +6,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, Dumbbell, History } from 'lucide-rea
 import BodySVG from '../components/BodySVG'
 import RestTimer from '../components/RestTimer'
 import { MUSCLE_GROUPS, SERIES_TYPES } from '../data/exercises'
+import { getExerciseGif } from '../data/exerciseGifs'
 
 export default function SessionDetail() {
   const { id } = useParams()
@@ -154,7 +155,10 @@ export default function SessionDetail() {
               style={{ padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}
             >
               <div style={{ flexShrink: 0 }}>
-                <BodySVG activeMuscles={block.exercise.muscles} size={48} />
+                {getExerciseGif(block.exercise.id)
+                  ? <img src={getExerciseGif(block.exercise.id)} alt={block.exercise.name} style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)' }} onError={e => e.target.style.display='none'} />
+                  : <BodySVG activeMuscles={block.exercise.muscles} size={48} />
+                }
               </div>
               <div style={{ flex: 1 }}>
                 <p style={{ fontFamily: 'Bebas Neue', fontSize: '20px' }}>{block.exercise.name}</p>

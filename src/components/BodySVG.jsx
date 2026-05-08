@@ -1,151 +1,78 @@
-// Muscle SVG paths (front view)
-const MUSCLE_PATHS_FRONT = {
-  chest: {
-    path: "M 140 110 C 130 105 115 108 108 118 C 102 128 104 142 112 148 C 125 155 140 150 148 142 C 155 135 155 120 148 113 Z M 160 110 C 170 105 185 108 192 118 C 198 128 196 142 188 148 C 175 155 160 150 152 142 C 145 135 145 120 152 113 Z",
-    label: "Pectoraux"
-  },
-  shoulders: {
-    path: "M 95 105 C 82 98 75 112 78 128 C 80 138 88 144 98 140 C 108 136 112 124 108 112 Z M 205 105 C 218 98 225 112 222 128 C 220 138 212 144 202 140 C 192 136 188 124 192 112 Z",
-    label: "Épaules"
-  },
-  biceps: {
-    path: "M 82 142 C 74 148 68 162 70 176 C 72 188 80 196 90 194 C 100 192 106 180 104 168 C 102 156 94 144 82 142 Z M 218 142 C 226 148 232 162 230 176 C 228 188 220 196 210 194 C 200 192 194 180 196 168 C 198 156 206 144 218 142 Z",
-    label: "Biceps"
-  },
-  triceps: {
-    path: "",
-    label: "Triceps"
-  },
-  forearms: {
-    path: "M 74 198 C 68 206 64 220 66 234 C 68 244 76 250 84 248 C 92 246 96 236 94 224 C 92 212 84 200 74 198 Z M 226 198 C 232 206 236 220 234 234 C 232 244 224 250 216 248 C 208 246 204 236 206 224 C 208 212 216 200 226 198 Z",
-    label: "Avant-bras"
-  },
-  abs: {
-    path: "M 138 158 L 162 158 L 162 180 L 138 180 Z M 136 184 L 152 184 L 152 204 L 136 204 Z M 148 184 L 164 184 L 164 204 L 148 204 Z M 134 208 L 151 208 L 151 228 L 134 228 Z M 149 208 L 166 208 L 166 228 L 149 228 Z",
-    label: "Abdominaux"
-  },
-  obliques: {
-    path: "M 120 165 C 112 170 108 185 110 198 C 112 208 120 214 128 210 C 136 206 138 192 136 180 C 134 168 128 162 120 165 Z M 180 165 C 188 170 192 185 190 198 C 188 208 180 214 172 210 C 164 206 162 192 164 180 C 166 168 172 162 180 165 Z",
-    label: "Obliques"
-  },
-  quads: {
-    path: "M 122 240 C 112 245 106 265 108 285 C 110 305 120 320 132 320 C 144 320 150 305 148 285 C 146 265 138 245 122 240 Z M 178 240 C 188 245 194 265 192 285 C 190 305 180 320 168 320 C 156 320 150 305 152 285 C 154 265 162 245 178 240 Z",
-    label: "Quadriceps"
-  },
-  hamstrings: {
-    path: "",
-    label: "Ischio-jambiers"
-  },
-  glutes: {
-    path: "",
-    label: "Fessiers"
-  },
-  calves: {
-    path: "M 120 328 C 112 334 108 352 112 370 C 115 384 124 392 132 388 C 140 384 142 368 140 354 C 138 340 128 326 120 328 Z M 180 328 C 188 334 192 352 188 370 C 185 384 176 392 168 388 C 160 384 158 368 160 354 C 162 340 172 326 180 328 Z",
-    label: "Mollets"
-  },
-  traps: {
-    path: "M 148 78 C 140 82 132 90 128 100 C 136 104 148 106 150 106 C 152 106 164 104 172 100 C 168 90 160 82 152 78 Z",
-    label: "Trapèzes"
-  },
-  lats: {
-    path: "",
-    label: "Grand dorsal"
-  },
-  lower_back: {
-    path: "",
-    label: "Bas du dos"
-  },
-  back: {
-    path: "",
-    label: "Dos"
-  },
+const FRONT_MUSCLES = {
+  chest: "M 108 118 C 102 112 118 105 135 108 L 148 155 C 132 158 112 150 108 138 Z M 192 118 C 198 112 182 105 165 108 L 152 155 C 168 158 188 150 192 138 Z",
+  shoulders: "M 88 108 C 78 100 72 118 76 132 C 78 140 86 146 96 142 C 106 138 110 126 106 114 Z M 212 108 C 222 100 228 118 224 132 C 222 140 214 146 204 142 C 194 138 190 126 194 114 Z",
+  biceps: "M 78 144 C 70 150 66 166 68 180 C 70 190 78 196 88 194 C 98 192 102 180 100 168 C 98 156 88 140 78 144 Z M 222 144 C 230 150 234 166 232 180 C 230 190 222 196 212 194 C 202 192 198 180 200 168 C 202 156 212 140 222 144 Z",
+  forearms: "M 68 198 C 62 208 60 224 62 238 C 64 248 72 252 80 250 C 88 248 92 236 90 224 C 88 212 78 196 68 198 Z M 232 198 C 238 208 240 224 238 238 C 236 248 228 252 220 250 C 212 248 208 236 210 224 C 212 212 222 196 232 198 Z",
+  abs: "M 138 160 L 162 160 L 160 182 L 140 182 Z M 137 186 L 151 186 L 150 206 L 138 206 Z M 149 186 L 163 186 L 162 206 L 150 206 Z M 136 210 L 150 210 L 149 228 L 137 228 Z M 150 210 L 164 210 L 163 228 L 151 228 Z",
+  obliques: "M 118 168 C 110 174 106 190 108 202 C 110 212 118 216 126 212 C 134 208 136 194 134 182 C 132 170 126 164 118 168 Z M 182 168 C 190 174 194 190 192 202 C 190 212 182 216 174 212 C 166 208 164 194 166 182 C 168 170 174 164 182 168 Z",
+  quads: "M 120 242 C 110 248 104 268 106 288 C 108 308 120 322 132 320 C 144 318 150 304 148 284 C 146 264 136 238 120 242 Z M 180 242 C 190 248 196 268 194 288 C 192 308 180 322 168 320 C 156 318 150 304 152 284 C 154 264 164 238 180 242 Z",
+  calves: "M 118 332 C 110 338 106 356 110 372 C 113 384 122 390 130 386 C 138 382 140 368 138 354 C 136 340 126 328 118 332 Z M 182 332 C 190 338 194 356 190 372 C 187 384 178 390 170 386 C 162 382 160 368 162 354 C 164 340 174 328 182 332 Z",
+  traps: "M 135 82 C 128 88 124 98 128 106 C 136 110 150 112 150 112 C 150 112 164 110 172 106 C 176 98 172 88 165 82 Z",
 }
 
-const MUSCLE_PATHS_BACK = {
-  traps: {
-    path: "M 148 78 C 138 82 128 90 124 104 C 132 110 148 114 150 114 C 152 114 168 110 176 104 C 172 90 162 82 152 78 Z",
-  },
-  back: {
-    path: "M 118 118 C 108 125 104 145 108 162 C 112 175 125 182 138 178 C 148 175 152 162 150 148 Z M 182 118 C 192 125 196 145 192 162 C 188 175 175 182 162 178 C 152 175 148 162 150 148 Z",
-  },
-  lats: {
-    path: "M 108 148 C 100 158 96 178 100 196 C 103 210 114 216 124 210 C 134 204 136 188 132 172 C 128 156 118 144 108 148 Z M 192 148 C 200 158 204 178 200 196 C 197 210 186 216 176 210 C 166 204 164 188 168 172 C 172 156 182 144 192 148 Z",
-  },
-  lower_back: {
-    path: "M 132 212 C 126 218 124 232 126 244 C 128 254 136 260 144 258 C 152 256 156 244 154 232 C 152 220 144 210 132 212 Z M 168 212 C 174 218 176 232 174 244 C 172 254 164 260 156 258 C 148 256 144 244 146 232 C 148 220 156 210 168 212 Z",
-  },
-  glutes: {
-    path: "M 118 248 C 108 255 104 272 108 288 C 112 302 124 308 136 302 C 148 296 150 280 146 266 C 142 252 130 244 118 248 Z M 182 248 C 192 255 196 272 192 288 C 188 302 176 308 164 302 C 152 296 150 280 154 266 C 158 252 170 244 182 248 Z",
-  },
-  hamstrings: {
-    path: "M 120 310 C 110 318 106 338 110 356 C 114 370 126 376 136 370 C 146 364 148 348 144 332 C 140 316 130 306 120 310 Z M 180 310 C 190 318 194 338 190 356 C 186 370 174 376 164 370 C 154 364 152 348 156 332 C 160 316 170 306 180 310 Z",
-  },
-  calves: {
-    path: "M 122 378 C 114 384 110 400 114 416 C 117 428 126 434 134 430 C 142 426 144 412 142 398 C 140 384 130 374 122 378 Z M 178 378 C 186 384 190 400 186 416 C 183 428 174 434 166 430 C 158 426 156 412 158 398 C 160 384 170 374 178 378 Z",
-  },
-  triceps: {
-    path: "M 82 142 C 74 148 68 164 70 178 C 72 190 80 196 90 194 C 100 192 106 178 104 166 C 102 154 92 138 82 142 Z M 218 142 C 226 148 232 164 230 178 C 228 190 220 196 210 194 C 200 192 194 178 196 166 C 198 154 208 138 218 142 Z",
-  },
-  shoulders: {
-    path: "M 95 105 C 82 98 75 112 78 128 C 80 138 88 144 98 140 C 108 136 112 124 108 112 Z M 205 105 C 218 98 225 112 222 128 C 220 138 212 144 202 140 C 192 136 188 124 192 112 Z",
-  },
+const BACK_MUSCLES = {
+  traps: "M 130 82 C 120 88 114 100 118 112 C 128 118 150 122 150 122 C 150 122 172 118 182 112 C 186 100 180 88 170 82 Z",
+  back: "M 112 122 C 102 130 98 150 102 168 C 106 182 118 188 132 184 C 146 180 150 165 150 150 Z M 188 122 C 198 130 202 150 198 168 C 194 182 182 188 168 184 C 154 180 150 165 150 150 Z",
+  lats: "M 100 152 C 90 164 88 184 94 200 C 98 212 110 216 120 210 C 130 204 132 188 128 172 C 124 156 112 146 100 152 Z M 200 152 C 210 164 212 184 206 200 C 202 212 190 216 180 210 C 170 204 168 188 172 172 C 176 156 188 146 200 152 Z",
+  lower_back: "M 130 214 C 122 220 120 234 122 246 C 124 256 132 262 142 260 C 152 258 156 246 154 234 C 152 222 144 210 130 214 Z M 170 214 C 178 220 180 234 178 246 C 176 256 168 262 158 260 C 148 258 144 246 146 234 C 148 222 156 210 170 214 Z",
+  glutes: "M 116 252 C 106 260 102 278 106 294 C 110 308 122 314 134 308 C 146 302 150 286 146 270 C 142 254 128 246 116 252 Z M 184 252 C 194 260 198 278 194 294 C 190 308 178 314 166 308 C 154 302 150 286 154 270 C 158 254 172 246 184 252 Z",
+  hamstrings: "M 118 314 C 108 322 104 342 108 360 C 112 374 124 380 134 374 C 144 368 146 352 142 336 C 138 320 128 308 118 314 Z M 182 314 C 192 322 196 342 192 360 C 188 374 176 380 166 374 C 156 368 154 352 158 336 C 162 320 172 308 182 314 Z",
+  calves: "M 120 382 C 112 388 108 404 112 420 C 115 432 124 438 132 434 C 140 430 142 416 140 402 C 138 388 128 378 120 382 Z M 180 382 C 188 388 192 404 188 420 C 185 432 176 438 168 434 C 160 430 158 416 160 402 C 162 388 172 378 180 382 Z",
+  triceps: "M 76 144 C 68 150 64 168 66 182 C 68 194 76 200 86 198 C 96 196 100 182 98 168 C 96 154 86 138 76 144 Z M 224 144 C 232 150 236 168 234 182 C 232 194 224 200 214 198 C 204 196 200 182 202 168 C 204 154 214 138 224 144 Z",
+  shoulders: "M 88 108 C 78 100 72 118 76 132 C 78 140 86 146 96 142 C 106 138 110 126 106 114 Z M 212 108 C 222 100 228 118 224 132 C 222 140 214 146 204 142 C 194 138 190 126 194 114 Z",
 }
 
-function BodySVG({ activeMuscles = [], view = 'front', size = 200 }) {
-  const paths = view === 'front' ? MUSCLE_PATHS_FRONT : MUSCLE_PATHS_BACK
-  const scale = size / 300
+const BACK_ONLY = ['back', 'lats', 'lower_back', 'hamstrings', 'glutes', 'triceps']
+const FRONT_ONLY = ['chest', 'biceps', 'abs', 'quads', 'obliques', 'forearms']
 
+function Silhouette() {
   return (
-    <svg
-      viewBox="0 0 300 450"
-      width={size}
-      height={size * 1.5}
-      style={{ display: 'block' }}
-    >
-      {/* Body silhouette */}
-      <g opacity="0.15">
-        {/* Head */}
-        <ellipse cx="150" cy="52" rx="28" ry="32" fill="#ffffff" />
-        {/* Neck */}
-        <rect x="140" y="78" width="20" height="20" fill="#ffffff" rx="4" />
-        {/* Torso */}
-        <path d="M 105 98 C 95 100 80 110 76 132 L 72 240 L 228 240 L 224 132 C 220 110 205 100 195 98 Z" fill="#ffffff" />
-        {/* Left arm */}
-        <path d="M 78 130 C 68 135 60 155 62 195 C 63 220 68 245 72 255 L 90 255 L 95 195 L 102 142 Z" fill="#ffffff" />
-        {/* Right arm */}
-        <path d="M 222 130 C 232 135 240 155 238 195 C 237 220 232 245 228 255 L 210 255 L 205 195 L 198 142 Z" fill="#ffffff" />
-        {/* Left leg */}
-        <path d="M 115 238 L 108 390 L 140 390 L 148 238 Z" fill="#ffffff" />
-        {/* Right leg */}
-        <path d="M 185 238 L 192 390 L 160 390 L 152 238 Z" fill="#ffffff" />
-      </g>
-
-      {/* Active muscles */}
-      {Object.entries(paths).map(([muscle, data]) => {
-        if (!data.path) return null
-        const isActive = activeMuscles.includes(muscle)
-        return (
-          <path
-            key={muscle}
-            d={data.path}
-            fill={isActive ? '#e63946' : '#ffffff'}
-            opacity={isActive ? 0.9 : 0.08}
-            style={{ transition: 'all 0.3s ease' }}
-          />
-        )
-      })}
-
-      {/* Muscle lines details */}
-      {view === 'front' && (
-        <g stroke="#ffffff" strokeWidth="0.5" opacity="0.06" fill="none">
-          <line x1="150" y1="158" x2="150" y2="228" />
-          <line x1="138" y1="184" x2="162" y2="184" />
-          <line x1="136" y1="208" x2="164" y2="208" />
-        </g>
-      )}
-    </svg>
+    <g opacity="0.12" fill="#ffffff">
+      <ellipse cx="150" cy="52" rx="26" ry="30" />
+      <rect x="138" y="78" width="24" height="20" rx="5" />
+      <path d="M 102 98 C 90 102 76 114 74 138 L 70 242 L 230 242 L 226 138 C 224 114 210 102 198 98 Z" />
+      <path d="M 74 135 C 62 140 54 162 56 202 C 57 228 62 252 66 260 L 86 260 L 92 202 L 100 148 Z" />
+      <path d="M 226 135 C 238 140 246 162 244 202 C 243 228 238 252 234 260 L 214 260 L 208 202 L 200 148 Z" />
+      <path d="M 112 240 L 104 395 L 140 395 L 150 240 Z" />
+      <path d="M 188 240 L 196 395 L 160 395 L 150 240 Z" />
+    </g>
   )
 }
 
-export default BodySVG
+export default function BodySVG({ activeMuscles = [], size = 200, showBoth = false }) {
+  const activeSet = new Set(activeMuscles)
+  const hasBack = activeMuscles.some(m => BACK_ONLY.includes(m))
+  const hasFront = activeMuscles.some(m => FRONT_ONLY.includes(m))
+
+  const frontMuscles = Object.entries(FRONT_MUSCLES).map(([muscle, path]) => (
+    <path key={muscle} d={path} fill={activeSet.has(muscle) ? '#e63946' : '#ffffff'} opacity={activeSet.has(muscle) ? 0.92 : 0.07} style={{ transition: 'all 0.3s' }} />
+  ))
+
+  const backMuscles = Object.entries(BACK_MUSCLES).map(([muscle, path]) => (
+    <path key={muscle} d={path} fill={activeSet.has(muscle) ? '#e63946' : '#ffffff'} opacity={activeSet.has(muscle) ? 0.92 : 0.07} style={{ transition: 'all 0.3s' }} />
+  ))
+
+  const w = size
+  const h = size * 1.5
+
+  if (showBoth || (hasBack && hasFront)) {
+    return (
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: '9px', color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>Face</p>
+          <svg viewBox="0 0 300 450" width={w} height={h}><Silhouette />{frontMuscles}</svg>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: '9px', color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>Dos</p>
+          <svg viewBox="0 0 300 450" width={w} height={h}><Silhouette />{backMuscles}</svg>
+        </div>
+      </div>
+    )
+  }
+
+  if (hasBack) {
+    return <svg viewBox="0 0 300 450" width={w} height={h} style={{ display: 'block' }}><Silhouette />{backMuscles}</svg>
+  }
+
+  return <svg viewBox="0 0 300 450" width={w} height={h} style={{ display: 'block' }}><Silhouette />{frontMuscles}</svg>
+}

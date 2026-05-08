@@ -7,10 +7,11 @@ import SessionDetail from './pages/SessionDetail'
 import Profile from './pages/Profile'
 import Messages from './pages/Messages'
 import Clients from './pages/Clients'
+import Schedule from './pages/Schedule'
 import Navbar from './components/Navbar'
 
 function ProtectedRoute({ children, coachOnly = false }) {
-  const { user, profile, loading, isCoach } = useAuth()
+  const { user, loading, isCoach } = useAuth()
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', flexDirection: 'column', gap: '16px' }}>
       <div style={{ fontFamily: 'Bebas Neue', fontSize: '48px', color: 'var(--accent)' }}>NYTROFORM</div>
@@ -23,12 +24,7 @@ function ProtectedRoute({ children, coachOnly = false }) {
 }
 
 function AppLayout({ children }) {
-  return (
-    <>
-      {children}
-      <Navbar />
-    </>
-  )
+  return <>{children}<Navbar /></>
 }
 
 function AppRoutes() {
@@ -42,6 +38,7 @@ function AppRoutes() {
       <Route path="/profile" element={<ProtectedRoute><AppLayout><Profile /></AppLayout></ProtectedRoute>} />
       <Route path="/messages" element={<ProtectedRoute><AppLayout><Messages /></AppLayout></ProtectedRoute>} />
       <Route path="/clients" element={<ProtectedRoute coachOnly><AppLayout><Clients /></AppLayout></ProtectedRoute>} />
+      <Route path="/schedule" element={<ProtectedRoute><AppLayout><Schedule /></AppLayout></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
   )
