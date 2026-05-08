@@ -1,95 +1,86 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { useAuth } from '../context/AuthContext'
-import { ChevronLeft, ChevronRight, Plus, X, Dumbbell, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, Clock, Dumbbell } from 'lucide-react'
 
-const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
-const DAYS_SHORT = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam']
-const DAYS_FULL = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
+const DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+const DAYS_FULL = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+const HOURS = Array.from({ length: 15 }, (_, i) => i + 7) // 7h → 21h
 
-function getDaysInMonth(year, month) {
-  return new Date(year, month + 1, 0).getDate()
+function getMonday(date) {
+  const d = new Date(date)
+  const day = d.getDay()
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+  d.setDate(diff)
+  d.setHours(0, 0, 0, 0)
+  return d
 }
-function getFirstDayOfMonth(year, month) {
-  return new Date(year, month, 1).getDay()
+
+function addDays(date, days) {
+  const d = new Date(date)
+  d.setDate(d.getDate() + days)
+  return d
 }
-function formatDate(year, month, day) {
-  return `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+
+function formatDate(date) {
+  return date.toISOString().split('T')[0]
 }
 
 export default function Schedule() {
   const { user, isCoach } = useAuth()
-  const navigate = useNavigate()
-  const now = new Date()
-  const [year, setYear] = useState(now.getFullYear())
-  const [month, setMonth] = useState(now.getMonth())
+  const [weekStart, setWeekStart] = useState(getMonday(new Date()))
   const [events, setEvents] = useState([])
+  const [sessions, setSessions] = useState([])
   const [clients, setClients] = useState([])
-  const [allSessions, setAllSessions] = useState([])
-  const [selectedDay, setSelectedDay] = useState(null)
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ client_id: '', session_id: '', note: '' })
-  const [saving, setSaving] = useState(false)
+  const [showForm, setShowForm] = useState(null) // { day, hour }
+  const [form, setForm] = useState({ session_id: '', client_id: '', hour: 9, duration: 60, note: '' })
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [saving, setSaving] = useState(false)
 
-  useEffect(() => { fetchAll() }, [year, month])
+  useEffect(() => { fetchAll() }, [weekStart])
 
   async function fetchAll() {
-    const start = `${year}-${String(month+1).padStart(2,'0')}-01`
-    const end = `${year}-${String(month+1).padStart(2,'0')}-${getDaysInMonth(year,month)}`
+    const start = formatDate(weekStart)
+    const end = formatDate(addDays(weekStart, 7))
 
-    let q = supabase.from('schedule_events').select('*').gte('date', start).lte('date', end)
-    if (!isCoach) q = q.eq('client_id', user.id)
-    const { data } = await q
-    setEvents(data || [])
+    let eventsQuery = supabase.from('schedule_events').select('*').gte('date', start).lt('date', end)
+    if (!isCoach) eventsQuery = eventsQuery.eq('client_id', user.id)
+
+    const { data: eventsData } = await eventsQuery
+    setEvents(eventsData || [])
 
     if (isCoach) {
-      const { data: c } = await supabase.from('profiles').select('id, full_name').eq('role', 'client')
-      setClients(c || [])
-      const { data: s } = await supabase.from('sessions').select('id, name, client_id')
-      setAllSessions(s || [])
+      const { data: clientsData } = await supabase.from('profiles').select('id, full_name').eq('role', 'client')
+      setClients(clientsData || [])
+      const { data: sessionsData } = await supabase.from('sessions').select('id, name, client_id')
+      setSessions(sessionsData || [])
     } else {
-      const { data: s } = await supabase.from('sessions').select('id, name').eq('client_id', user.id)
-      setAllSessions(s || [])
+      const { data: sessionsData } = await supabase.from('sessions').select('id, name').eq('client_id', user.id)
+      setSessions(sessionsData || [])
     }
   }
 
-  function prevMonth() {
-    if (month === 0) { setYear(y => y-1); setMonth(11) }
-    else setMonth(m => m-1)
-  }
-  function nextMonth() {
-    if (month === 11) { setYear(y => y+1); setMonth(0) }
-    else setMonth(m => m+1)
-  }
-
-  function openDay(day) {
-    setSelectedDay(day)
-    setShowForm(false)
-    setForm({ client_id: '', session_id: '', note: '' })
-  }
-
-  async function saveEvent() {
-    if (!form.session_id || !selectedDay) return
+  async function createEvent() {
+    if (!form.session_id || !showForm) return
     setSaving(true)
-    const session = allSessions.find(s => s.id === form.session_id)
-    const clientId = isCoach ? form.client_id : user.id
-    const client = clients.find(c => c.id === clientId)
-    const date = formatDate(year, month, selectedDay)
+    const date = formatDate(addDays(weekStart, showForm.day))
+    const session = sessions.find(s => s.id === form.session_id)
+    const client = clients.find(c => c.id === (form.client_id || session?.client_id))
 
     await supabase.from('schedule_events').insert({
-      coach_id: isCoach ? user.id : null,
-      client_id: clientId,
-      client_name: client?.full_name || null,
+      coach_id: user.id,
+      client_id: form.client_id || session?.client_id,
+      client_name: client?.full_name,
       session_id: form.session_id,
       session_name: session?.name,
       date,
+      hour: form.hour,
+      duration: form.duration,
       note: form.note
     })
 
-    setShowForm(false)
-    setForm({ client_id: '', session_id: '', note: '' })
+    setShowForm(null)
+    setForm({ session_id: '', client_id: '', hour: 9, duration: 60, note: '' })
     fetchAll()
     setSaving(false)
   }
@@ -100,177 +91,179 @@ export default function Schedule() {
     fetchAll()
   }
 
-  const daysInMonth = getDaysInMonth(year, month)
-  const firstDay = getFirstDayOfMonth(year, month)
-  const todayStr = formatDate(now.getFullYear(), now.getMonth(), now.getDate())
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
+  const today = formatDate(new Date())
 
-  const eventsForDay = (day) => {
-    const date = formatDate(year, month, day)
-    return events.filter(e => e.date === date)
+  const getEventsForSlot = (dayIdx, hour) => {
+    const date = formatDate(addDays(weekStart, dayIdx))
+    return events.filter(e => e.date === date && e.hour === hour)
   }
 
-  const dayEvents = selectedDay ? eventsForDay(selectedDay) : []
-  const selectedDate = selectedDay ? new Date(year, month, selectedDay) : null
-
-  const clientSessions = allSessions.filter(s => !form.client_id || s.client_id === form.client_id)
+  const clientSessions = (clientId) => sessions.filter(s => !clientId || s.client_id === clientId)
 
   return (
-    <div style={{ padding: '0 0 100px', maxWidth: '600px', margin: '0 auto' }}>
-
+    <div style={{ padding: '0 0 100px', maxWidth: '100%' }}>
       {/* Header */}
-      <div style={{ padding: '24px 16px 16px' }}>
-        <h1 style={{ fontSize: '36px', marginBottom: '16px' }}>PLANNING</h1>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button onClick={prevMonth} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', padding: '8px 12px', cursor: 'pointer' }}>
+      <div style={{ padding: '24px 16px 16px', background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
+        <h1 style={{ fontSize: '36px', marginBottom: '12px' }}>PLANNING</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button onClick={() => setWeekStart(addDays(weekStart, -7))} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', padding: '6px 10px', cursor: 'pointer' }}>
             <ChevronLeft size={18} />
           </button>
-          <h2 style={{ fontSize: '24px', textAlign: 'center' }}>{MONTHS[month]} {year}</h2>
-          <button onClick={nextMonth} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', padding: '8px 12px', cursor: 'pointer' }}>
+          <span style={{ fontSize: '14px', fontWeight: 600, flex: 1, textAlign: 'center' }}>
+            {weekStart.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} — {addDays(weekStart, 6).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </span>
+          <button onClick={() => setWeekStart(addDays(weekStart, 7))} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', padding: '6px 10px', cursor: 'pointer' }}>
             <ChevronRight size={18} />
           </button>
         </div>
+        <button onClick={() => setWeekStart(getMonday(new Date()))} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: '12px', marginTop: '8px', padding: 0 }}>
+          Aujourd'hui
+        </button>
       </div>
 
-      {/* Jours de la semaine */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '0 16px', marginBottom: '4px' }}>
-        {DAYS_SHORT.map(d => (
-          <div key={d} style={{ textAlign: 'center', fontSize: '11px', color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '4px 0' }}>{d}</div>
-        ))}
-      </div>
+      {/* Calendrier */}
+      <div style={{ overflowX: 'auto' }}>
+        <div style={{ minWidth: '480px' }}>
+          {/* Header jours */}
+          <div style={{ display: 'grid', gridTemplateColumns: '44px repeat(7, 1fr)', borderBottom: '1px solid var(--border)', background: 'var(--bg2)' }}>
+            <div />
+            {weekDays.map((day, i) => {
+              const isToday = formatDate(day) === today
+              return (
+                <div key={i} style={{ padding: '10px 4px', textAlign: 'center', borderLeft: '1px solid var(--border)' }}>
+                  <p style={{ fontSize: '10px', color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{DAYS[i]}</p>
+                  <div style={{
+                    width: '28px', height: '28px', borderRadius: '50%',
+                    background: isToday ? 'var(--accent)' : 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '2px auto 0',
+                  }}>
+                    <p style={{ fontSize: '13px', fontWeight: isToday ? 700 : 400 }}>{day.getDate()}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
 
-      {/* Grille calendrier */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px', padding: '0 16px', marginBottom: '24px' }}>
-        {/* Cases vides avant le 1er */}
-        {Array.from({ length: firstDay }, (_, i) => <div key={`empty-${i}`} />)}
-
-        {/* Jours */}
-        {Array.from({ length: daysInMonth }, (_, i) => {
-          const day = i + 1
-          const dateStr = formatDate(year, month, day)
-          const dayEvs = eventsForDay(day)
-          const isToday = dateStr === todayStr
-          const isSelected = selectedDay === day
-          const hasPast = new Date(dateStr) < new Date(todayStr)
-
-          return (
-            <div
-              key={day}
-              onClick={() => openDay(day)}
-              style={{
-                aspectRatio: '1',
-                borderRadius: '10px',
-                border: isSelected ? '2px solid var(--accent)' : '1px solid var(--border)',
-                background: isSelected ? 'rgba(230,57,70,0.08)' : isToday ? 'rgba(230,57,70,0.04)' : 'var(--card)',
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'flex-start',
-                padding: '6px 4px',
-                transition: 'all 0.15s',
-                opacity: hasPast && !dayEvs.length ? 0.4 : 1,
-              }}
-            >
-              <span style={{
-                fontSize: '13px',
-                fontWeight: isToday ? 700 : 400,
-                color: isToday ? 'var(--accent)' : isSelected ? 'var(--accent)' : 'var(--text)',
-                lineHeight: 1,
-                marginBottom: '4px'
-              }}>{day}</span>
-              {/* Points événements */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px', justifyContent: 'center' }}>
-                {dayEvs.slice(0, 3).map((e, idx) => (
-                  <div key={idx} style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--accent)' }} />
-                ))}
+          {/* Grille heures */}
+          {HOURS.map(hour => (
+            <div key={hour} style={{ display: 'grid', gridTemplateColumns: '44px repeat(7, 1fr)', borderBottom: '1px solid var(--border)', minHeight: '56px' }}>
+              <div style={{ padding: '4px 6px', textAlign: 'right', color: 'var(--text2)', fontSize: '11px', paddingTop: '6px' }}>
+                {hour}h
               </div>
+              {weekDays.map((day, dayIdx) => {
+                const slotEvents = getEventsForSlot(dayIdx, hour)
+                const isToday = formatDate(day) === today
+                return (
+                  <div
+                    key={dayIdx}
+                    style={{
+                      borderLeft: '1px solid var(--border)',
+                      padding: '3px',
+                      background: isToday ? 'rgba(230,57,70,0.02)' : 'transparent',
+                      cursor: isCoach ? 'pointer' : 'default',
+                      position: 'relative',
+                      minHeight: '56px'
+                    }}
+                    onClick={() => {
+                      if (!isCoach || slotEvents.length > 0) return
+                      setShowForm({ day: dayIdx, hour })
+                      setForm(f => ({ ...f, hour }))
+                    }}
+                  >
+                    {slotEvents.map(event => (
+                      <div
+                        key={event.id}
+                        onClick={(e) => { e.stopPropagation(); setSelectedEvent(event) }}
+                        style={{
+                          background: 'var(--accent)',
+                          borderRadius: '6px',
+                          padding: '4px 6px',
+                          cursor: 'pointer',
+                          marginBottom: '2px',
+                        }}
+                      >
+                        <p style={{ fontSize: '10px', fontWeight: 700, lineHeight: 1.2, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                          {event.session_name}
+                        </p>
+                        {isCoach && event.client_name && (
+                          <p style={{ fontSize: '9px', opacity: 0.8, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                            {event.client_name}
+                          </p>
+                        )}
+                        <p style={{ fontSize: '9px', opacity: 0.7 }}>{event.hour}h · {event.duration}min</p>
+                      </div>
+                    ))}
+                    {isCoach && slotEvents.length === 0 && (
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.15s' }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                        onMouseLeave={e => e.currentTarget.style.opacity = '0'}
+                      >
+                        <Plus size={14} style={{ color: 'var(--text2)' }} />
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
-          )
-        })}
+          ))}
+        </div>
       </div>
 
-      {/* Détail du jour sélectionné */}
-      {selectedDay && (
-        <div style={{ padding: '0 16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <div>
-              <h3 style={{ fontSize: '22px', lineHeight: 1 }}>
-                {DAYS_FULL[selectedDate.getDay()]} {selectedDay} {MONTHS[month]}
-              </h3>
-              {dayEvents.length === 0 && <p style={{ color: 'var(--text2)', fontSize: '13px', marginTop: '2px' }}>Aucune séance planifiée</p>}
+      {/* Modal création événement */}
+      {showForm && isCoach && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 300, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowForm(null)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg2)', borderRadius: '20px 20px 0 0', width: '100%', padding: '24px 20px 40px', maxHeight: '90vh', overflow: 'auto' }}>
+            <div style={{ width: '40px', height: '4px', background: 'var(--border)', borderRadius: '2px', margin: '0 auto 20px' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '24px' }}>
+                PLANIFIER UNE SÉANCE
+                <span style={{ fontSize: '14px', color: 'var(--text2)', display: 'block', fontFamily: 'DM Sans', fontWeight: 400 }}>
+                  {DAYS_FULL[showForm.day]} à {showForm.hour}h
+                </span>
+              </h2>
+              <button onClick={() => setShowForm(null)} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer' }}><X size={20} /></button>
             </div>
-            {isCoach && (
-              <button
-                className="btn-primary"
-                onClick={() => setShowForm(true)}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', fontSize: '13px' }}
-              >
-                <Plus size={15} /> Planifier
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ fontSize: '11px', color: 'var(--text2)', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Client</label>
+                <select value={form.client_id} onChange={e => setForm(f => ({ ...f, client_id: e.target.value, session_id: '' }))}>
+                  <option value="">Sélectionner un client</option>
+                  {clients.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', color: 'var(--text2)', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Séance</label>
+                <select value={form.session_id} onChange={e => setForm(f => ({ ...f, session_id: e.target.value }))} disabled={!form.client_id}>
+                  <option value="">Sélectionner une séance</option>
+                  {sessions.filter(s => s.client_id === form.client_id).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', color: 'var(--text2)', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Heure</label>
+                  <select value={form.hour} onChange={e => setForm(f => ({ ...f, hour: parseInt(e.target.value) }))}>
+                    {HOURS.map(h => <option key={h} value={h}>{h}:00</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', color: 'var(--text2)', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Durée</label>
+                  <select value={form.duration} onChange={e => setForm(f => ({ ...f, duration: parseInt(e.target.value) }))}>
+                    {[30, 45, 60, 75, 90, 120].map(d => <option key={d} value={d}>{d} min</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', color: 'var(--text2)', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Note (optionnel)</label>
+                <input value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} placeholder="Ex: Apporter sa ceinture..." />
+              </div>
+              <button className="btn-primary" onClick={createEvent} disabled={saving || !form.session_id} style={{ padding: '14px', fontSize: '15px', opacity: (!form.session_id) ? 0.5 : 1 }}>
+                {saving ? 'Planification...' : 'PLANIFIER'}
               </button>
-            )}
-          </div>
-
-          {/* Liste séances du jour */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
-            {dayEvents.map(event => (
-              <div
-                key={event.id}
-                className="card"
-                style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
-                onClick={() => setSelectedEvent(event)}
-              >
-                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Dumbbell size={20} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: 700, fontSize: '15px' }}>{event.session_name}</p>
-                  {isCoach && event.client_name && (
-                    <p style={{ fontSize: '12px', color: 'var(--accent)', marginTop: '2px' }}>👤 {event.client_name}</p>
-                  )}
-                  {event.note && <p style={{ fontSize: '12px', color: 'var(--text2)', marginTop: '2px' }}>💬 {event.note}</p>}
-                </div>
-                <button
-                  onClick={e => { e.stopPropagation(); navigate(`/session/${event.session_id}`) }}
-                  style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', padding: '6px 10px', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
-                >
-                  Voir
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* Formulaire ajout séance */}
-          {showForm && isCoach && (
-            <div className="card" style={{ padding: '20px', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ fontSize: '20px' }}>PLANIFIER UNE SÉANCE</h3>
-                <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer' }}><X size={18} /></button>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '11px', color: 'var(--text2)', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Client</label>
-                  <select value={form.client_id} onChange={e => setForm(f => ({ ...f, client_id: e.target.value, session_id: '' }))}>
-                    <option value="">Sélectionner un client</option>
-                    {clients.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: '11px', color: 'var(--text2)', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Séance</label>
-                  <select value={form.session_id} onChange={e => setForm(f => ({ ...f, session_id: e.target.value }))} disabled={!form.client_id}>
-                    <option value="">-- Choisir une séance --</option>
-                    {clientSessions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: '11px', color: 'var(--text2)', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Note (optionnel)</label>
-                  <input value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} placeholder="Ex: Apporter sa ceinture..." />
-                </div>
-                <button className="btn-primary" onClick={saveEvent} disabled={saving || !form.session_id} style={{ padding: '12px', opacity: !form.session_id ? 0.5 : 1 }}>
-                  {saving ? 'Sauvegarde...' : 'CONFIRMER'}
-                </button>
-              </div>
             </div>
-          )}
+          </div>
         </div>
       )}
 
@@ -279,39 +272,49 @@ export default function Schedule() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 300, display: 'flex', alignItems: 'flex-end' }} onClick={() => setSelectedEvent(null)}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg2)', borderRadius: '20px 20px 0 0', width: '100%', padding: '24px 20px 40px' }}>
             <div style={{ width: '40px', height: '4px', background: 'var(--border)', borderRadius: '2px', margin: '0 auto 20px' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '20px' }}>
-              <div style={{ width: '52px', height: '52px', borderRadius: '12px', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Dumbbell size={24} />
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Dumbbell size={22} />
               </div>
               <div>
-                <h2 style={{ fontSize: '24px', lineHeight: 1 }}>{selectedEvent.session_name}</h2>
-                <p style={{ color: 'var(--text2)', fontSize: '13px', marginTop: '4px' }}>
-                  {new Date(selectedEvent.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                <h2 style={{ fontSize: '22px', lineHeight: 1 }}>{selectedEvent.session_name}</h2>
+                <p style={{ color: 'var(--text2)', fontSize: '13px', marginTop: '2px' }}>
+                  {new Date(selectedEvent.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </p>
               </div>
             </div>
-            {isCoach && selectedEvent.client_name && (
-              <div style={{ background: 'var(--bg3)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px' }}>
-                <p style={{ fontSize: '11px', color: 'var(--text2)', textTransform: 'uppercase', marginBottom: '2px' }}>Client</p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+              <div className="card" style={{ padding: '12px' }}>
+                <p style={{ fontSize: '10px', color: 'var(--text2)', textTransform: 'uppercase', marginBottom: '4px' }}>Heure</p>
+                <p style={{ fontFamily: 'Bebas Neue', fontSize: '24px', color: 'var(--accent)' }}>{selectedEvent.hour}:00</p>
+              </div>
+              <div className="card" style={{ padding: '12px' }}>
+                <p style={{ fontSize: '10px', color: 'var(--text2)', textTransform: 'uppercase', marginBottom: '4px' }}>Durée</p>
+                <p style={{ fontFamily: 'Bebas Neue', fontSize: '24px', color: 'var(--accent)' }}>{selectedEvent.duration} min</p>
+              </div>
+            </div>
+
+            {selectedEvent.client_name && isCoach && (
+              <div style={{ background: 'var(--bg3)', borderRadius: '10px', padding: '12px', marginBottom: '16px' }}>
+                <p style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '2px' }}>Client</p>
                 <p style={{ fontWeight: 700 }}>{selectedEvent.client_name}</p>
               </div>
             )}
+
             {selectedEvent.note && (
-              <div style={{ background: 'var(--bg3)', borderRadius: '10px', padding: '12px 14px', marginBottom: '16px' }}>
-                <p style={{ fontSize: '11px', color: 'var(--text2)', textTransform: 'uppercase', marginBottom: '2px' }}>Note</p>
+              <div style={{ background: 'var(--bg3)', borderRadius: '10px', padding: '12px', marginBottom: '16px' }}>
+                <p style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '2px' }}>Note</p>
                 <p style={{ fontSize: '14px' }}>{selectedEvent.note}</p>
               </div>
             )}
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button className="btn-primary" onClick={() => { setSelectedEvent(null); navigate(`/session/${selectedEvent.session_id}`) }} style={{ flex: 1, padding: '12px' }}>
-                Voir la séance
+
+            {isCoach && (
+              <button onClick={() => deleteEvent(selectedEvent.id)} style={{ background: 'rgba(230,57,70,0.1)', border: '1px solid rgba(230,57,70,0.4)', borderRadius: '8px', color: 'var(--accent)', padding: '12px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, width: '100%' }}>
+                Supprimer ce créneau
               </button>
-              {isCoach && (
-                <button onClick={() => deleteEvent(selectedEvent.id)} style={{ background: 'rgba(230,57,70,0.1)', border: '1px solid rgba(230,57,70,0.4)', borderRadius: '8px', color: 'var(--accent)', padding: '12px 16px', cursor: 'pointer' }}>
-                  <Trash2 size={18} />
-                </button>
-              )}
-            </div>
+            )}
           </div>
         </div>
       )}
