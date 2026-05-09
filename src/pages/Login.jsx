@@ -95,7 +95,7 @@ export default function Login() {
           Pas encore de compte ? Contacte ton coach.
         </p>
         <p style={{ textAlign: 'center', color: 'var(--text2)', fontSize: '11px', marginTop: '12px', opacity: 0.5, letterSpacing: '0.05em' }}>
-          Application créée par <span style={{ color: 'var(--accent)' }}>Ben Pailles</span>
+          Application créée par <span style={{ color: 'var(--accent)' }}>Erwann Joseph</span> · Propriétaire <span style={{ color: 'var(--accent)' }}>Ben Pailles</span>
         </p>
       </div>
     </div>
