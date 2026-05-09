@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { LayoutDashboard, User, MessageCircle, Users, CalendarDays } from 'lucide-react'
+import { LayoutDashboard, User, MessageCircle, Users, CalendarDays, TrendingUp } from 'lucide-react'
 
 export default function Navbar() {
   const { isCoach } = useAuth()
@@ -9,10 +9,12 @@ export default function Navbar() {
     { to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Séances' },
     { to: '/clients', icon: <Users size={20} />, label: 'Clients' },
     { to: '/schedule', icon: <CalendarDays size={20} />, label: 'Planning' },
+    { to: '/progression', icon: <TrendingUp size={20} />, label: 'Stats' },
     { to: '/messages', icon: <MessageCircle size={20} />, label: 'Messages' },
   ] : [
     { to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Séances' },
     { to: '/schedule', icon: <CalendarDays size={20} />, label: 'Planning' },
+    { to: '/progression', icon: <TrendingUp size={20} />, label: 'Stats' },
     { to: '/profile', icon: <User size={20} />, label: 'Profil' },
     { to: '/messages', icon: <MessageCircle size={20} />, label: 'Messages' },
   ]

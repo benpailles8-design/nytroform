@@ -9,6 +9,7 @@ import Messages from './pages/Messages'
 import Clients from './pages/Clients'
 import ClientProfile from './pages/ClientProfile'
 import Schedule from './pages/Schedule'
+import Progression from './pages/Progression'
 import Navbar from './components/Navbar'
 
 function ProtectedRoute({ children, coachOnly = false }) {
@@ -41,6 +42,7 @@ function AppRoutes() {
       <Route path="/clients" element={<ProtectedRoute coachOnly><AppLayout><Clients /></AppLayout></ProtectedRoute>} />
       <Route path="/client/:clientId" element={<ProtectedRoute coachOnly><AppLayout><ClientProfile /></AppLayout></ProtectedRoute>} />
       <Route path="/schedule" element={<ProtectedRoute><AppLayout><Schedule /></AppLayout></ProtectedRoute>} />
+      <Route path="/progression" element={<ProtectedRoute><AppLayout><Progression /></AppLayout></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
   )
