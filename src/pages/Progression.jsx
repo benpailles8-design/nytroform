@@ -109,66 +109,91 @@ function MultiLineChart({ measurements }) {
 
   if (available.length === 0) return null
 
-  // Collecter toutes les dates uniques
   const allDates = [...new Set(measurements.map(m => m.date))].sort()
   if (allDates.length < 2) return <p style={{ color: 'var(--text2)', fontSize: 13 }}>Pas assez de données</p>
 
-  const W = 300, H = 120, padX = 10, padY = 10
+  const W = 280, H = 150, padLeft = 36, padRight = 10, padTop = 10, padBottom = 24
 
-  // Normaliser chaque série entre 0 et 1 pour les afficher ensemble
-  const series = available.filter(m => visible.includes(m.key)).map(m => {
-    const data = measurements.filter(e => e[m.key] != null).map(e => ({
-      date: e.date, value: parseFloat(e[m.key])
-    }))
+  const visibleSeries = available.filter(m => visible.includes(m.key)).map(m => {
+    const data = measurements.filter(e => e[m.key] != null).map(e => ({ date: e.date, value: parseFloat(e[m.key]) }))
     const vals = data.map(d => d.value)
-    const min = Math.min(...vals)
-    const max = Math.max(...vals)
-    const range = max - min || 1
-    return { ...m, data, min, max, range }
+    return { ...m, data, min: Math.min(...vals), max: Math.max(...vals) }
   })
+
+  // Echelle globale Y
+  const allVals = visibleSeries.flatMap(s => s.data.map(d => d.value))
+  const globalMin = allVals.length ? Math.min(...allVals) : 0
+  const globalMax = allVals.length ? Math.max(...allVals) : 100
+  const globalRange = globalMax - globalMin || 10
+
+  const toX = (dateIdx) => padLeft + (dateIdx / Math.max(allDates.length - 1, 1)) * (W - padLeft - padRight)
+  const toY = (val) => padTop + (1 - (val - globalMin) / globalRange) * (H - padTop - padBottom)
+
+  // Graduations Y (4 niveaux)
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map(t => globalMin + t * globalRange)
 
   return (
     <div>
-      {/* Légende */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {available.map(m => (
           <button key={m.key} onClick={() => setVisible(v => v.includes(m.key) ? v.filter(k => k !== m.key) : [...v, m.key])}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', padding: '3px 8px', borderRadius: 6, opacity: visible.includes(m.key) ? 1 : 0.3, transition: 'opacity 0.2s' }}>
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: m.color, flexShrink: 0 }} />
-            <span style={{ fontSize: 11, color: 'var(--text)', fontWeight: 500 }}>{m.label}</span>
+            style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'var(--bg3)', border: `1px solid ${visible.includes(m.key) ? m.color : 'var(--border)'}`, cursor: 'pointer', padding: '3px 10px', borderRadius: 20, opacity: visible.includes(m.key) ? 1 : 0.4, transition: 'all 0.2s' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: m.color }} />
+            <span style={{ fontSize: 11, color: 'var(--text)' }}>{m.label}</span>
           </button>
         ))}
       </div>
 
-      {/* Graphique */}
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={140} style={{ overflow: 'visible' }}>
-        {[0, 0.5, 1].map((t, i) => (
-          <line key={i} x1={padX} y1={padY + t * (H - padY * 2)} x2={W - padX} y2={padY + t * (H - padY * 2)}
-            stroke="var(--border)" strokeWidth="0.5" strokeDasharray="4,4" />
-        ))}
-        {series.map(s => {
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H + 10} style={{ overflow: 'visible' }}>
+        {/* Graduations Y */}
+        {yTicks.map((val, i) => {
+          const y = toY(val)
+          return (
+            <g key={i}>
+              <line x1={padLeft} y1={y} x2={W - padRight} y2={y} stroke="var(--border)" strokeWidth="0.5" strokeDasharray="3,3" />
+              <text x={padLeft - 4} y={y + 3} textAnchor="end" fontSize="8" fill="var(--text2)">{Math.round(val)}</text>
+            </g>
+          )
+        })}
+
+        {/* Graduations X (dates) */}
+        {allDates.map((date, i) => {
+          if (allDates.length > 6 && i % Math.ceil(allDates.length / 6) !== 0 && i !== allDates.length - 1) return null
+          const x = toX(i)
+          const label = new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+          return (
+            <g key={date}>
+              <line x1={x} y1={padTop} x2={x} y2={H - padBottom} stroke="var(--border)" strokeWidth="0.3" />
+              <text x={x} y={H - padBottom + 12} textAnchor="middle" fontSize="8" fill="var(--text2)">{label}</text>
+            </g>
+          )
+        })}
+
+        {/* Axes */}
+        <line x1={padLeft} y1={padTop} x2={padLeft} y2={H - padBottom} stroke="var(--border)" strokeWidth="1" />
+        <line x1={padLeft} y1={H - padBottom} x2={W - padRight} y2={H - padBottom} stroke="var(--border)" strokeWidth="1" />
+
+        {/* Séries */}
+        {visibleSeries.map(s => {
           const points = s.data.map(d => {
-            const dateIdx = allDates.indexOf(d.date)
-            const x = padX + (dateIdx / (allDates.length - 1)) * (W - padX * 2)
-            const y = H - padY - ((d.value - s.min) / s.range) * (H - padY * 2)
-            return { x, y }
+            const di = allDates.indexOf(d.date)
+            return { x: toX(di), y: toY(d.value), value: d.value }
           })
-          if (points.length < 1) return null
+          if (!points.length) return null
           const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
           return (
             <g key={s.key}>
               {points.length > 1 && <path d={pathD} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />}
-              {points.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={3} fill={s.color} />)}
+              {points.map((p, i) => (
+                <g key={i}>
+                  <circle cx={p.x} cy={p.y} r={3} fill={s.color} />
+                  <text x={p.x} y={p.y - 6} textAnchor="middle" fontSize="7" fill={s.color}>{p.value}</text>
+                </g>
+              ))}
             </g>
           )
         })}
       </svg>
-
-      {/* Dates */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-        <span style={{ fontSize: 10, color: 'var(--text2)' }}>{new Date(allDates[0]).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</span>
-        <span style={{ fontSize: 10, color: 'var(--text2)' }}>{new Date(allDates[allDates.length - 1]).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</span>
-      </div>
     </div>
   )
 }

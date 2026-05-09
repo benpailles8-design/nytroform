@@ -197,7 +197,7 @@ export default function Profile({ clientId = null, readOnly = false }) {
                   const diff = current && prev ? (current - prev).toFixed(1) : null
 
                   return (
-                    <div key={field.key} className="card" style={{ padding: '14px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div key={field.key} className="card" style={{ padding: '14px', marginBottom: '8px' }}>
                       <div style={{ flex: 1 }}>
                         <p style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '2px' }}>{field.icon} {field.label}</p>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
