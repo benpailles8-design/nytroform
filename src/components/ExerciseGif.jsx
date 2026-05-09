@@ -118,11 +118,12 @@ export default function ExerciseGif({ exerciseId, exerciseName, muscles = [], si
   async function lockGif() {
     if (!url) return
     setLocking(true)
-    await supabase.from('exercise_gifs').upsert({
+    const { error } = await supabase.from('exercise_gifs').upsert({
       exercise_id: exerciseId,
       gif_url: url,
       locked: true
     }, { onConflict: 'exercise_id' })
+    if (error) { alert('Erreur: ' + error.message); setLocking(false); return }
     setLocked(true)
     setLocking(false)
   }
