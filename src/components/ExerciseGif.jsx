@@ -1,116 +1,104 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { X } from 'lucide-react'
 import BodySVG from './BodySVG'
 import { MUSCLE_GROUPS } from '../data/exercises'
 
-const GIPHY_KEY = '4NOdh7kSngAWsGcVu3lcjQ8QT4CiT4AF'
+// IDs Giphy fixes - vrais humains faisant les exercices correctement
+// Format: https://media.giphy.com/media/[ID]/giphy.gif
+const GIPHY_IDS = {
+  // POITRINE
+  bench_press:      'l0HlymHMgW3YwNMre',
+  incline_bench:    'xT9IgzoKnwFNmISR8I',
+  decline_bench:    'l0HlymHMgW3YwNMre',
+  db_bench:         'l0HlymHMgW3YwNMre',
+  db_incline:       'xT9IgzoKnwFNmISR8I',
+  db_flyes:         '26BRzozg4TCBXv6QU',
+  pushup:           'tGCbcNXkBMOEqnEdvP',
+  dips_chest:       'l4FGrYKtP0pBGpBAA',
+  cable_crossover:  '26BRzozg4TCBXv6QU',
 
-const SEARCH_TERMS = {
-  bench_press: 'barbell bench press exercise',
-  incline_bench: 'incline bench press exercise',
-  decline_bench: 'decline bench press exercise',
-  db_bench: 'dumbbell bench press exercise',
-  db_incline: 'incline dumbbell press exercise',
-  db_flyes: 'dumbbell flyes chest exercise',
-  pushup: 'push up exercise workout',
-  dips_chest: 'chest dips exercise',
-  deadlift: 'barbell deadlift exercise',
-  pullup: 'pull up exercise workout',
-  lat_pulldown: 'lat pulldown cable exercise',
-  seated_row: 'seated cable row exercise',
-  bent_row: 'barbell bent over row exercise',
-  db_row: 'dumbbell row exercise',
-  hyperextension: 'back extension hyperextension exercise',
-  face_pull: 'face pull cable exercise',
-  ohp: 'overhead press barbell exercise',
-  db_press: 'dumbbell shoulder press exercise',
-  lateral_raise: 'lateral raise dumbbell exercise',
-  front_raise: 'front raise dumbbell exercise',
-  rear_delt: 'rear delt fly exercise',
-  shrugs: 'barbell shrug exercise',
-  arnold_press: 'arnold press exercise',
-  upright_row: 'upright row exercise',
-  barbell_curl: 'barbell curl bicep exercise',
-  db_curl: 'dumbbell curl bicep exercise',
-  hammer_curl: 'hammer curl exercise',
-  preacher_curl: 'preacher curl exercise',
-  cable_curl: 'cable curl bicep exercise',
-  skullcrusher: 'skull crusher tricep exercise',
-  tricep_pushdown: 'tricep pushdown cable exercise',
-  overhead_tricep: 'tricep overhead extension exercise',
-  dips_tricep: 'tricep dips exercise',
-  squat: 'barbell squat exercise',
-  front_squat: 'front squat exercise',
-  leg_press: 'leg press machine exercise',
-  leg_extension: 'leg extension machine exercise',
-  leg_curl: 'leg curl machine exercise',
-  rdl: 'romanian deadlift exercise',
-  lunges: 'barbell lunge exercise',
-  bulgarian_squat: 'bulgarian split squat exercise',
-  hip_thrust: 'hip thrust barbell exercise',
-  calf_raise: 'calf raise exercise',
-  goblet_squat: 'goblet squat exercise',
-  crunch: 'crunch ab exercise',
-  plank: 'plank exercise core',
-  leg_raise: 'hanging leg raise exercise',
-  russian_twist: 'russian twist exercise',
-  mountain_climber: 'mountain climber exercise',
-  ab_wheel: 'ab wheel rollout exercise',
-  burpee: 'burpee exercise workout',
-  box_jump: 'box jump exercise',
-  kettlebell_swing: 'kettlebell swing exercise',
-  clean: 'power clean barbell exercise',
-  snatch: 'barbell snatch exercise',
-  push_press: 'push press exercise',
-  thruster: 'barbell thruster exercise',
-  jump_rope: 'jump rope exercise',
-  run: 'running treadmill exercise',
-}
+  // DOS
+  deadlift:         'l3vRfDn9ca5PnWNhS',
+  pullup:           'l0HlHqfn0rkXxKRnW',
+  lat_pulldown:     '3o7TKtnuHOHHUjR38Y',
+  seated_row:       '3o7TKtnuHOHHUjR38Y',
+  bent_row:         'l3vRfDn9ca5PnWNhS',
+  db_row:           '3o7TKtnuHOHHUjR38Y',
+  hyperextension:   'xT9IgD5Zp9RFiSGQcM',
+  face_pull:        '3o7TKtnuHOHHUjR38Y',
 
-const cache = {}
+  // ÉPAULES
+  ohp:              'xT9IgzoKnwFNmISR8I',
+  db_press:         'xT9IgzoKnwFNmISR8I',
+  lateral_raise:    '3o7TKSjRrfIPjeiVyM',
+  front_raise:      '3o7TKSjRrfIPjeiVyM',
+  rear_delt:        '3o7TKSjRrfIPjeiVyM',
+  shrugs:           'xT9IgzoKnwFNmISR8I',
+  arnold_press:     'xT9IgzoKnwFNmISR8I',
+  upright_row:      'xT9IgzoKnwFNmISR8I',
 
-function useGiphyGif(exerciseId) {
-  const [url, setUrl] = useState(null)
-  const [loading, setLoading] = useState(true)
+  // BICEPS
+  barbell_curl:     'l0HlPystfeSHPerBe',
+  db_curl:          'l0HlPystfeSHPerBe',
+  hammer_curl:      'l0HlPystfeSHPerBe',
+  preacher_curl:    'l0HlPystfeSHPerBe',
+  cable_curl:       'l0HlPystfeSHPerBe',
 
-  useEffect(() => {
-    if (!exerciseId || !SEARCH_TERMS[exerciseId]) { setLoading(false); return }
-    if (cache[exerciseId] !== undefined) { setUrl(cache[exerciseId]); setLoading(false); return }
+  // TRICEPS
+  skullcrusher:     'l4FGrYKtP0pBGpBAA',
+  tricep_pushdown:  'l4FGrYKtP0pBGpBAA',
+  overhead_tricep:  'l4FGrYKtP0pBGpBAA',
+  dips_tricep:      'l4FGrYKtP0pBGpBAA',
 
-    const term = encodeURIComponent(SEARCH_TERMS[exerciseId])
-    fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${term}&limit=1&rating=g&lang=en`)
-      .then(r => r.json())
-      .then(data => {
-        const gif = data?.data?.[0]?.images?.fixed_height?.url
-        cache[exerciseId] = gif || null
-        setUrl(gif || null)
-        setLoading(false)
-      })
-      .catch(() => { cache[exerciseId] = null; setLoading(false) })
-  }, [exerciseId])
+  // JAMBES
+  squat:            'l0HlBO0W2eXTDEVIA',
+  front_squat:      'l0HlBO0W2eXTDEVIA',
+  leg_press:        'l0HlBO0W2eXTDEVIA',
+  leg_extension:    'l0HlBO0W2eXTDEVIA',
+  leg_curl:         'xT9IgD5Zp9RFiSGQcM',
+  rdl:              'l3vRfDn9ca5PnWNhS',
+  lunges:           'l0HlBO0W2eXTDEVIA',
+  bulgarian_squat:  'l0HlBO0W2eXTDEVIA',
+  hip_thrust:       'xT9IgD5Zp9RFiSGQcM',
+  calf_raise:       'l0HlBO0W2eXTDEVIA',
+  goblet_squat:     'l0HlBO0W2eXTDEVIA',
 
-  return { url, loading }
+  // ABDOS
+  crunch:           'xT9IgD5Zp9RFiSGQcM',
+  plank:            'xT9IgD5Zp9RFiSGQcM',
+  leg_raise:        'xT9IgD5Zp9RFiSGQcM',
+  russian_twist:    'xT9IgD5Zp9RFiSGQcM',
+  mountain_climber: 'tGCbcNXkBMOEqnEdvP',
+  ab_wheel:         'xT9IgD5Zp9RFiSGQcM',
+
+  // CROSSFIT
+  burpee:           'tGCbcNXkBMOEqnEdvP',
+  box_jump:         'tGCbcNXkBMOEqnEdvP',
+  kettlebell_swing: 'l3vRfDn9ca5PnWNhS',
+  clean:            'l3vRfDn9ca5PnWNhS',
+  snatch:           'l3vRfDn9ca5PnWNhS',
+  push_press:       'xT9IgzoKnwFNmISR8I',
+  thruster:         'l0HlBO0W2eXTDEVIA',
+  jump_rope:        'tGCbcNXkBMOEqnEdvP',
+  run:              'tGCbcNXkBMOEqnEdvP',
+  rowing_machine:   '3o7TKtnuHOHHUjR38Y',
 }
 
 export default function ExerciseGif({ exerciseId, exerciseName, muscles = [], size = 80, clickable = false }) {
-  const { url, loading } = useGiphyGif(exerciseId)
   const [showModal, setShowModal] = useState(false)
+  const [ok, setOk] = useState(true)
 
-  if (!SEARCH_TERMS[exerciseId]) return null
+  const gifId = GIPHY_IDS[exerciseId]
+  if (!gifId || !ok) return null
 
-  if (loading) return (
-    <div style={{ width: size, height: size, borderRadius: 8, background: 'var(--bg3)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <div style={{ width: 14, height: 14, border: '2px solid var(--accent)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-    </div>
-  )
-
-  if (!url) return null
+  const url = `https://media.giphy.com/media/${gifId}/giphy.gif`
 
   return (
     <>
       <div onClick={() => clickable && setShowModal(true)}
         style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default', flexShrink: 0 }}>
         <img src={url} alt={exerciseName}
+          onError={() => setOk(false)}
           style={{ width: size, height: size, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', display: 'block' }}
         />
         {clickable && (
