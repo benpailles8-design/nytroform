@@ -3,41 +3,39 @@ import { X } from 'lucide-react'
 import BodySVG from './BodySVG'
 import { MUSCLE_GROUPS } from '../data/exercises'
 
-// Videos MP4 hébergées sur le repo GitHub
-// Pour ajouter un exercice : télécharge la vidéo, renomme-la en [exercise_id].mp4
-// et place-la dans public/gifs/
-const VIDEO_IDS = [
-  'bench_press',
-  // Ajoute les IDs ici au fur et à mesure
+const AVAILABLE = [
+  'bench_press','incline_bench','decline_bench','db_bench','db_incline',
+  'db_flyes','pushup','dips_chest','deadlift','pullup','lat_pulldown',
+  'seated_row','bent_row','db_row','hyperextension','ohp','db_press',
+  'lateral_raise','front_raise','shrugs','arnold_press','barbell_curl',
+  'db_curl','hammer_curl','preacher_curl','skullcrusher','tricep_pushdown',
+  'overhead_tricep','dips_tricep','squat','leg_press','leg_extension',
+  'leg_curl','rdl','lunges','hip_thrust','calf_raise','goblet_squat',
+  'bulgarian_squat','crunch','plank','leg_raise','russian_twist',
+  'mountain_climber','burpee','kettlebell_swing','jump_rope','face_pull',
+  'upright_row','box_jump',
 ]
 
 export default function ExerciseGif({ exerciseId, exerciseName, muscles = [], size = 80, clickable = false }) {
+  const [ok, setOk] = useState(true)
   const [showModal, setShowModal] = useState(false)
-  const [error, setError] = useState(false)
 
-  const hasVideo = VIDEO_IDS.includes(exerciseId)
-  if (!hasVideo || error) return null
+  if (!AVAILABLE.includes(exerciseId) || !ok) return null
 
-  const url = `/gifs/${exerciseId}.mp4`
+  const url = `/gifs/${exerciseId}.gif`
 
   return (
     <>
-      <div
-        onClick={() => clickable && setShowModal(true)}
-        style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default', flexShrink: 0 }}
-      >
-        <video
+      <div onClick={() => clickable && setShowModal(true)}
+        style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default', flexShrink: 0 }}>
+        <img
           src={url}
-          autoPlay
-          loop
-          muted
-          playsInline
-          onError={() => setError(true)}
-          style={{ width: size, height: size, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', display: 'block', background: 'var(--bg3)' }}
+          alt={exerciseName}
+          onError={() => setOk(false)}
+          style={{ width: size, height: size, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', display: 'block', background: 'white' }}
         />
         {clickable && (
-          <div
-            style={{ position: 'absolute', inset: 0, borderRadius: 8, background: 'rgba(0,0,0,0.45)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.2s' }}
+          <div style={{ position: 'absolute', inset: 0, borderRadius: 8, background: 'rgba(0,0,0,0.45)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.2s' }}
             onMouseEnter={e => e.currentTarget.style.opacity = '1'}
             onMouseLeave={e => e.currentTarget.style.opacity = '0'}
           >
@@ -53,11 +51,7 @@ export default function ExerciseGif({ exerciseId, exerciseName, muscles = [], si
           </button>
           <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 440, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
             <h2 style={{ fontFamily: 'Bebas Neue', fontSize: 32, textAlign: 'center' }}>{exerciseName}</h2>
-            <video
-              src={url}
-              autoPlay loop muted playsInline
-              style={{ width: '100%', maxWidth: 360, borderRadius: 16, border: '1px solid var(--border)', background: 'var(--bg3)' }}
-            />
+            <img src={url} alt={exerciseName} style={{ width: '100%', maxWidth: 360, borderRadius: 16, border: '1px solid var(--border)', background: 'white' }} />
             {muscles.length > 0 && (
               <div className="card" style={{ width: '100%', padding: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
                 <BodySVG activeMuscles={muscles} size={70} showBoth={true} />
