@@ -1,50 +1,120 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import BodySVG from './BodySVG'
 import { MUSCLE_GROUPS } from '../data/exercises'
 
-const AVAILABLE = new Set([
-  'bench_press','incline_bench','decline_bench','db_bench','db_incline',
-  'db_flyes','pushup','dips_chest','deadlift','pullup','lat_pulldown',
-  'seated_row','bent_row','db_row','hyperextension','ohp','db_press',
-  'lateral_raise','front_raise','shrugs','arnold_press','barbell_curl',
-  'db_curl','hammer_curl','preacher_curl','skullcrusher','tricep_pushdown',
-  'overhead_tricep','dips_tricep','squat','leg_press','leg_extension',
-  'leg_curl','rdl','lunges','hip_thrust','calf_raise','goblet_squat',
-  'bulgarian_squat','crunch','plank','leg_raise','russian_twist',
-  'mountain_climber','burpee','kettlebell_swing','jump_rope','face_pull',
-  'upright_row','box_jump',
-])
+const GIPHY_KEY = '4NOdh7kSngAWsGcVu3lcjQ8QT4CiT4AF'
+
+const SEARCH_TERMS = {
+  bench_press: 'barbell bench press exercise',
+  incline_bench: 'incline bench press exercise',
+  decline_bench: 'decline bench press exercise',
+  db_bench: 'dumbbell bench press exercise',
+  db_incline: 'incline dumbbell press exercise',
+  db_flyes: 'dumbbell flyes chest exercise',
+  pushup: 'push up exercise workout',
+  dips_chest: 'chest dips exercise',
+  deadlift: 'barbell deadlift exercise',
+  pullup: 'pull up exercise workout',
+  lat_pulldown: 'lat pulldown cable exercise',
+  seated_row: 'seated cable row exercise',
+  bent_row: 'barbell bent over row exercise',
+  db_row: 'dumbbell row exercise',
+  hyperextension: 'back extension hyperextension exercise',
+  face_pull: 'face pull cable exercise',
+  ohp: 'overhead press barbell exercise',
+  db_press: 'dumbbell shoulder press exercise',
+  lateral_raise: 'lateral raise dumbbell exercise',
+  front_raise: 'front raise dumbbell exercise',
+  rear_delt: 'rear delt fly exercise',
+  shrugs: 'barbell shrug exercise',
+  arnold_press: 'arnold press exercise',
+  upright_row: 'upright row exercise',
+  barbell_curl: 'barbell curl bicep exercise',
+  db_curl: 'dumbbell curl bicep exercise',
+  hammer_curl: 'hammer curl exercise',
+  preacher_curl: 'preacher curl exercise',
+  cable_curl: 'cable curl bicep exercise',
+  skullcrusher: 'skull crusher tricep exercise',
+  tricep_pushdown: 'tricep pushdown cable exercise',
+  overhead_tricep: 'tricep overhead extension exercise',
+  dips_tricep: 'tricep dips exercise',
+  squat: 'barbell squat exercise',
+  front_squat: 'front squat exercise',
+  leg_press: 'leg press machine exercise',
+  leg_extension: 'leg extension machine exercise',
+  leg_curl: 'leg curl machine exercise',
+  rdl: 'romanian deadlift exercise',
+  lunges: 'barbell lunge exercise',
+  bulgarian_squat: 'bulgarian split squat exercise',
+  hip_thrust: 'hip thrust barbell exercise',
+  calf_raise: 'calf raise exercise',
+  goblet_squat: 'goblet squat exercise',
+  crunch: 'crunch ab exercise',
+  plank: 'plank exercise core',
+  leg_raise: 'hanging leg raise exercise',
+  russian_twist: 'russian twist exercise',
+  mountain_climber: 'mountain climber exercise',
+  ab_wheel: 'ab wheel rollout exercise',
+  burpee: 'burpee exercise workout',
+  box_jump: 'box jump exercise',
+  kettlebell_swing: 'kettlebell swing exercise',
+  clean: 'power clean barbell exercise',
+  snatch: 'barbell snatch exercise',
+  push_press: 'push press exercise',
+  thruster: 'barbell thruster exercise',
+  jump_rope: 'jump rope exercise',
+  run: 'running treadmill exercise',
+}
+
+const cache = {}
+
+function useGiphyGif(exerciseId) {
+  const [url, setUrl] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!exerciseId || !SEARCH_TERMS[exerciseId]) { setLoading(false); return }
+    if (cache[exerciseId] !== undefined) { setUrl(cache[exerciseId]); setLoading(false); return }
+
+    const term = encodeURIComponent(SEARCH_TERMS[exerciseId])
+    fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${term}&limit=1&rating=g&lang=en`)
+      .then(r => r.json())
+      .then(data => {
+        const gif = data?.data?.[0]?.images?.fixed_height?.url
+        cache[exerciseId] = gif || null
+        setUrl(gif || null)
+        setLoading(false)
+      })
+      .catch(() => { cache[exerciseId] = null; setLoading(false) })
+  }, [exerciseId])
+
+  return { url, loading }
+}
 
 export default function ExerciseGif({ exerciseId, exerciseName, muscles = [], size = 80, clickable = false }) {
+  const { url, loading } = useGiphyGif(exerciseId)
   const [showModal, setShowModal] = useState(false)
 
-  if (!AVAILABLE.has(exerciseId)) return null
+  if (!SEARCH_TERMS[exerciseId]) return null
 
-  const url = `/gifs/${exerciseId}.gif`
+  if (loading) return (
+    <div style={{ width: size, height: size, borderRadius: 8, background: 'var(--bg3)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ width: 14, height: 14, border: '2px solid var(--accent)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    </div>
+  )
+
+  if (!url) return null
 
   return (
     <>
-      <div
-        onClick={() => clickable && setShowModal(true)}
-        style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default', flexShrink: 0, width: size, height: size }}
-      >
-        <img
-          src={url}
-          alt={exerciseName}
-          style={{
-            width: size,
-            height: size,
-            objectFit: 'cover',
-            borderRadius: 8,
-            border: '1px solid var(--border)',
-            display: 'block',
-            background: 'white',
-          }}
+      <div onClick={() => clickable && setShowModal(true)}
+        style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default', flexShrink: 0 }}>
+        <img src={url} alt={exerciseName}
+          style={{ width: size, height: size, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', display: 'block' }}
         />
         {clickable && (
-          <div
-            style={{ position: 'absolute', inset: 0, borderRadius: 8, background: 'rgba(0,0,0,0.45)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.2s' }}
+          <div style={{ position: 'absolute', inset: 0, borderRadius: 8, background: 'rgba(0,0,0,0.45)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.2s' }}
             onMouseEnter={e => e.currentTarget.style.opacity = '1'}
             onMouseLeave={e => e.currentTarget.style.opacity = '0'}
           >
@@ -60,7 +130,7 @@ export default function ExerciseGif({ exerciseId, exerciseName, muscles = [], si
           </button>
           <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 440, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
             <h2 style={{ fontFamily: 'Bebas Neue', fontSize: 32, textAlign: 'center' }}>{exerciseName}</h2>
-            <img src={url} alt={exerciseName} style={{ width: '100%', maxWidth: 360, borderRadius: 16, border: '1px solid var(--border)', background: 'white' }} />
+            <img src={url} alt={exerciseName} style={{ width: '100%', maxWidth: 360, borderRadius: 16, border: '1px solid var(--border)' }} />
             {muscles.length > 0 && (
               <div className="card" style={{ width: '100%', padding: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
                 <BodySVG activeMuscles={muscles} size={70} showBoth={true} />
