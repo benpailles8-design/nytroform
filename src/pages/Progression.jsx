@@ -5,18 +5,17 @@ import { ChevronLeft, TrendingUp, Dumbbell, Ruler, Search } from 'lucide-react'
 
 
 const MEASUREMENTS_LABELS = [
-  { key: 'weight', label: 'Poids', unit: 'kg' },
-  { key: 'height', label: 'Taille', unit: 'cm' },
-  { key: 'body_fat', label: 'Masse grasse', unit: '%' },
-  { key: 'muscle_mass', label: 'Masse musculaire', unit: 'kg' },
-  { key: 'chest_circ', label: 'Tour de poitrine', unit: 'cm' },
-  { key: 'waist_circ', label: 'Tour de taille', unit: 'cm' },
-  { key: 'hip_circ', label: 'Tour de hanches', unit: 'cm' },
-  { key: 'bicep_circ', label: 'Tour de bras', unit: 'cm' },
-  { key: 'thigh_circ', label: 'Tour de cuisse', unit: 'cm' },
-  { key: 'calf_circ', label: 'Tour de mollet', unit: 'cm' },
-  { key: 'shoulder_width', label: 'Largeur épaules', unit: 'cm' },
-  { key: 'forearm_circ', label: 'Tour avant-bras', unit: 'cm' },
+  { key: 'weight', label: 'Poids', unit: 'kg', color: '#e63946' },
+  { key: 'body_fat', label: 'Masse grasse', unit: '%', color: '#f4a261' },
+  { key: 'muscle_mass', label: 'Masse musculaire', unit: 'kg', color: '#06d6a0' },
+  { key: 'chest_circ', label: 'Tour de poitrine', unit: 'cm', color: '#4cc9f0' },
+  { key: 'waist_circ', label: 'Tour de taille', unit: 'cm', color: '#9b5de5' },
+  { key: 'hip_circ', label: 'Tour de hanches', unit: 'cm', color: '#f15bb5' },
+  { key: 'bicep_circ', label: 'Tour de bras', unit: 'cm', color: '#ffd166' },
+  { key: 'thigh_circ', label: 'Tour de cuisse', unit: 'cm', color: '#00b4d8' },
+  { key: 'calf_circ', label: 'Tour de mollet', unit: 'cm', color: '#90e0ef' },
+  { key: 'shoulder_width', label: 'Largeur épaules', unit: 'cm', color: '#80ffdb' },
+  { key: 'forearm_circ', label: 'Tour avant-bras', unit: 'cm', color: '#ffb347' },
 ]
 
 function LineChart({ data, color = '#e63946', unit = '' }) {
@@ -104,20 +103,87 @@ function LineChart({ data, color = '#e63946', unit = '' }) {
   )
 }
 
+function MultiLineChart({ measurements }) {
+  const available = MEASUREMENTS_LABELS.filter(m => measurements.some(e => e[m.key] != null))
+  const [visible, setVisible] = useState(available.map(m => m.key))
+
+  if (available.length === 0) return null
+
+  // Collecter toutes les dates uniques
+  const allDates = [...new Set(measurements.map(m => m.date))].sort()
+  if (allDates.length < 2) return <p style={{ color: 'var(--text2)', fontSize: 13 }}>Pas assez de données</p>
+
+  const W = 300, H = 120, padX = 10, padY = 10
+
+  // Normaliser chaque série entre 0 et 1 pour les afficher ensemble
+  const series = available.filter(m => visible.includes(m.key)).map(m => {
+    const data = measurements.filter(e => e[m.key] != null).map(e => ({
+      date: e.date, value: parseFloat(e[m.key])
+    }))
+    const vals = data.map(d => d.value)
+    const min = Math.min(...vals)
+    const max = Math.max(...vals)
+    const range = max - min || 1
+    return { ...m, data, min, max, range }
+  })
+
+  return (
+    <div>
+      {/* Légende */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+        {available.map(m => (
+          <button key={m.key} onClick={() => setVisible(v => v.includes(m.key) ? v.filter(k => k !== m.key) : [...v, m.key])}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', padding: '3px 8px', borderRadius: 6, opacity: visible.includes(m.key) ? 1 : 0.3, transition: 'opacity 0.2s' }}>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: m.color, flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: 'var(--text)', fontWeight: 500 }}>{m.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Graphique */}
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={140} style={{ overflow: 'visible' }}>
+        {[0, 0.5, 1].map((t, i) => (
+          <line key={i} x1={padX} y1={padY + t * (H - padY * 2)} x2={W - padX} y2={padY + t * (H - padY * 2)}
+            stroke="var(--border)" strokeWidth="0.5" strokeDasharray="4,4" />
+        ))}
+        {series.map(s => {
+          const points = s.data.map(d => {
+            const dateIdx = allDates.indexOf(d.date)
+            const x = padX + (dateIdx / (allDates.length - 1)) * (W - padX * 2)
+            const y = H - padY - ((d.value - s.min) / s.range) * (H - padY * 2)
+            return { x, y }
+          })
+          if (points.length < 1) return null
+          const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
+          return (
+            <g key={s.key}>
+              {points.length > 1 && <path d={pathD} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />}
+              {points.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={3} fill={s.color} />)}
+            </g>
+          )
+        })}
+      </svg>
+
+      {/* Dates */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+        <span style={{ fontSize: 10, color: 'var(--text2)' }}>{new Date(allDates[0]).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</span>
+        <span style={{ fontSize: 10, color: 'var(--text2)' }}>{new Date(allDates[allDates.length - 1]).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</span>
+      </div>
+    </div>
+  )
+}
+
 function MeasurementsTab({ userId }) {
   const [measurements, setMeasurements] = useState([])
   const [selected, setSelected] = useState('weight')
+  const [view, setView] = useState('global') // 'global' | 'detail'
 
   useEffect(() => {
     supabase.from('measurements').select('*').eq('user_id', userId).order('date').then(({ data }) => setMeasurements(data || []))
   }, [userId])
 
   const available = MEASUREMENTS_LABELS.filter(m => measurements.some(e => e[m.key] != null))
-
-  const chartData = measurements
-    .filter(m => m[selected] != null)
-    .map(m => ({ value: parseFloat(m[selected]), date: m.date }))
-
+  const chartData = measurements.filter(m => m[selected] != null).map(m => ({ value: parseFloat(m[selected]), date: m.date }))
   const selectedLabel = MEASUREMENTS_LABELS.find(m => m.key === selected)
 
   return (
@@ -129,27 +195,44 @@ function MeasurementsTab({ userId }) {
         </div>
       ) : (
         <>
-          {/* Sélecteur */}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-            {available.map(m => (
-              <button key={m.key} onClick={() => setSelected(m.key)} style={{
-                background: selected === m.key ? 'var(--accent)' : 'var(--bg3)',
-                border: `1px solid ${selected === m.key ? 'var(--accent)' : 'var(--border)'}`,
-                borderRadius: 20, padding: '5px 12px', fontSize: 12,
-                color: 'var(--text)', cursor: 'pointer', transition: 'all 0.2s'
-              }}>
-                {m.label}
-              </button>
-            ))}
+          {/* Toggle vue */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+            <button onClick={() => setView('global')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 12, background: view === 'global' ? 'var(--bg3)' : 'transparent', color: view === 'global' ? 'var(--text)' : 'var(--text2)', borderBottom: view === 'global' ? '2px solid var(--accent)' : '2px solid transparent' }}>
+              Vue globale
+            </button>
+            <button onClick={() => setView('detail')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 12, background: view === 'detail' ? 'var(--bg3)' : 'transparent', color: view === 'detail' ? 'var(--text)' : 'var(--text2)', borderBottom: view === 'detail' ? '2px solid var(--accent)' : '2px solid transparent' }}>
+              Par mesure
+            </button>
           </div>
 
-          {/* Graphique */}
-          <div className="card" style={{ padding: 16 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>
-              {selectedLabel?.label} ({selectedLabel?.unit})
-            </p>
-            <LineChart data={chartData} color="#e63946" unit={selectedLabel?.unit} />
-          </div>
+          {view === 'global' && (
+            <div className="card" style={{ padding: 16 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Toutes les mensurations</p>
+              <p style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 16 }}>Cliquez sur une légende pour masquer/afficher</p>
+              <MultiLineChart measurements={measurements} />
+            </div>
+          )}
+
+          {view === 'detail' && (
+            <>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+                {available.map(m => (
+                  <button key={m.key} onClick={() => setSelected(m.key)} style={{
+                    background: selected === m.key ? m.color : 'var(--bg3)',
+                    border: `1px solid ${selected === m.key ? m.color : 'var(--border)'}`,
+                    borderRadius: 20, padding: '5px 12px', fontSize: 12,
+                    color: 'var(--text)', cursor: 'pointer', transition: 'all 0.2s'
+                  }}>
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+              <div className="card" style={{ padding: 16 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>{selectedLabel?.label} ({selectedLabel?.unit})</p>
+                <LineChart data={chartData} color={selectedLabel?.color || '#e63946'} unit={selectedLabel?.unit} />
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
