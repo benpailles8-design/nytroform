@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 import { useAuth } from '../context/AuthContext'
 import { ChevronLeft, TrendingUp, Dumbbell, Ruler, Search } from 'lucide-react'
-import { MEASUREMENTS_FIELDS } from './Profile'
+
 
 const MEASUREMENTS_LABELS = [
   { key: 'weight', label: 'Poids', unit: 'kg' },
