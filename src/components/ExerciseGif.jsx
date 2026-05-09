@@ -3,7 +3,7 @@ import { X } from 'lucide-react'
 import BodySVG from './BodySVG'
 import { MUSCLE_GROUPS } from '../data/exercises'
 
-const AVAILABLE = [
+const AVAILABLE = new Set([
   'bench_press','incline_bench','decline_bench','db_bench','db_incline',
   'db_flyes','pushup','dips_chest','deadlift','pullup','lat_pulldown',
   'seated_row','bent_row','db_row','hyperextension','ohp','db_press',
@@ -14,28 +14,37 @@ const AVAILABLE = [
   'bulgarian_squat','crunch','plank','leg_raise','russian_twist',
   'mountain_climber','burpee','kettlebell_swing','jump_rope','face_pull',
   'upright_row','box_jump',
-]
+])
 
 export default function ExerciseGif({ exerciseId, exerciseName, muscles = [], size = 80, clickable = false }) {
-  const [ok, setOk] = useState(true)
   const [showModal, setShowModal] = useState(false)
 
-  if (!AVAILABLE.includes(exerciseId) || !ok) return null
+  if (!AVAILABLE.has(exerciseId)) return null
 
   const url = `/gifs/${exerciseId}.gif`
 
   return (
     <>
-      <div onClick={() => clickable && setShowModal(true)}
-        style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default', flexShrink: 0 }}>
+      <div
+        onClick={() => clickable && setShowModal(true)}
+        style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default', flexShrink: 0, width: size, height: size }}
+      >
         <img
           src={url}
           alt={exerciseName}
-          onError={() => setOk(false)}
-          style={{ width: size, height: size, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', display: 'block', background: 'white' }}
+          style={{
+            width: size,
+            height: size,
+            objectFit: 'cover',
+            borderRadius: 8,
+            border: '1px solid var(--border)',
+            display: 'block',
+            background: 'white',
+          }}
         />
         {clickable && (
-          <div style={{ position: 'absolute', inset: 0, borderRadius: 8, background: 'rgba(0,0,0,0.45)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.2s' }}
+          <div
+            style={{ position: 'absolute', inset: 0, borderRadius: 8, background: 'rgba(0,0,0,0.45)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.2s' }}
             onMouseEnter={e => e.currentTarget.style.opacity = '1'}
             onMouseLeave={e => e.currentTarget.style.opacity = '0'}
           >
