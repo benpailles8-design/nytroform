@@ -5,8 +5,6 @@ import { MUSCLE_GROUPS } from '../data/exercises'
 import { supabase } from '../supabase'
 import { useAuth } from '../context/AuthContext'
 
-const GIPHY_KEY = '4NOdh7kSngAWsGcVu3lcjQ8QT4CiT4AF'
-
 const TERMS = {
   bench_press:      'barbell bench press gym workout',
   incline_bench:    'incline bench press gym',
@@ -100,7 +98,7 @@ export default function ExerciseGif({ exerciseId, exerciseName, muscles = [], si
     const term = TERMS[exerciseId]
     if (!term) { setLoading(false); return }
     try {
-      const r = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(term)}&limit=1&offset=${off}&rating=g`)
+      const r = await fetch(`/api/giphy?q=${encodeURIComponent(term)}&offset=${off}`)
       const data = await r.json()
       const gif = data?.data?.[0]?.images?.downsized?.url || data?.data?.[0]?.images?.fixed_height?.url
       setUrl(gif || null)
