@@ -77,21 +77,7 @@ export default function Profile({ clientId = null, readOnly = false }) {
     return measurements.filter(m => m[key] != null).slice(0, 8).reverse()
   }
 
-  function MiniChart({ data, color = 'var(--accent)' }) {
-    if (data.length < 2) return null
-    const vals = data.map(d => d.value)
-    const min = Math.min(...vals)
-    const max = Math.max(...vals)
-    const range = max - min || 1
-    const w = 80, h = 32
-    const points = vals.map((v, i) => `${(i / (vals.length - 1)) * w},${h - ((v - min) / range) * (h - 4) - 2}`).join(' ')
-    return (
-      <svg width={w} height={h} style={{ display: 'block' }}>
-        <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
-        <circle cx={(vals.length - 1) / (vals.length - 1) * w} cy={h - ((vals[vals.length - 1] - min) / range) * (h - 4) - 2} r="3" fill={color} />
-      </svg>
-    )
-  }
+
 
   const displayName = targetProfile?.full_name || (clientId ? 'Client' : profile?.full_name)
 
@@ -226,7 +212,7 @@ export default function Profile({ clientId = null, readOnly = false }) {
                           )}
                         </div>
                       </div>
-                      {history.length >= 2 && <MiniChart data={history} />}
+
                     </div>
                   )
                 })}
