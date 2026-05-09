@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 import { useAuth } from '../context/AuthContext'
 import { Plus, TrendingUp, ChevronDown, ChevronUp, Save } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 const MEASUREMENTS_FIELDS = [
   { key: 'weight', label: 'Poids', unit: 'kg', icon: '⚖️', category: 'Corps' },
@@ -23,6 +24,7 @@ const CATEGORIES = ['Corps', 'Mensurations']
 
 export default function Profile({ clientId = null, readOnly = false }) {
   const { user, profile, refreshProfile } = useAuth()
+  const navigate = useNavigate()
   const targetId = clientId || user?.id
   const [measurements, setMeasurements] = useState([])
   const [form, setForm] = useState({})
@@ -122,6 +124,17 @@ export default function Profile({ clientId = null, readOnly = false }) {
             {value && <p style={{ fontSize: '9px', color: 'var(--text2)' }}>{unit}</p>}
           </div>
         ))}
+      </div>
+
+      {/* Bouton voir progression */}
+      <div style={{ padding: '0 16px', marginBottom: '12px' }}>
+        <button
+          onClick={() => navigate('/progression')}
+          className=btn-ghost
+          style={{ width: '100%', padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '13px' }}
+        >
+          <TrendingUp size={16} /> Voir mes graphiques de progression
+        </button>
       </div>
 
       {/* Bouton ajouter mesure */}
