@@ -1,34 +1,36 @@
 import { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { X, RefreshCw, Lock, Unlock } from 'lucide-react'
 import BodySVG from './BodySVG'
 import { MUSCLE_GROUPS } from '../data/exercises'
+import { supabase } from '../supabase'
+import { useAuth } from '../context/AuthContext'
 
 const GIPHY_KEY = '4NOdh7kSngAWsGcVu3lcjQ8QT4CiT4AF'
 
 const TERMS = {
-  bench_press:      'barbell bench press gym',
+  bench_press:      'barbell bench press gym workout',
   incline_bench:    'incline bench press gym',
   decline_bench:    'decline bench press gym',
   db_bench:         'dumbbell bench press gym',
   db_incline:       'incline dumbbell press gym',
   db_flyes:         'dumbbell fly chest gym',
-  pushup:           'push ups exercise',
+  pushup:           'push ups exercise workout',
   dips_chest:       'chest dips exercise gym',
   cable_crossover:  'cable crossover chest gym',
-  deadlift:         'deadlift barbell gym',
+  deadlift:         'deadlift barbell gym workout',
   pullup:           'pull ups exercise gym',
   lat_pulldown:     'lat pulldown gym exercise',
   seated_row:       'seated cable row gym',
   bent_row:         'barbell row gym exercise',
-  db_row:           'dumbbell row gym',
-  hyperextension:   'back extension gym exercise',
+  db_row:           'dumbbell row back gym',
+  hyperextension:   'back extension hyperextension gym',
   face_pull:        'face pull cable gym',
   ohp:              'overhead press barbell gym',
   db_press:         'dumbbell shoulder press gym',
   lateral_raise:    'lateral raise dumbbell gym',
   front_raise:      'front raise dumbbell gym',
   rear_delt:        'rear delt fly gym',
-  shrugs:           'barbell shrug trap gym',
+  shrugs:           'barbell shrug traps gym',
   arnold_press:     'arnold press gym',
   upright_row:      'upright row barbell gym',
   barbell_curl:     'barbell curl bicep gym',
@@ -38,12 +40,12 @@ const TERMS = {
   skullcrusher:     'skull crusher tricep gym',
   tricep_pushdown:  'tricep pushdown cable gym',
   overhead_tricep:  'tricep overhead extension gym',
-  dips_tricep:      'tricep dips gym',
-  squat:            'barbell squat gym exercise',
+  dips_tricep:      'tricep dips gym workout',
+  squat:            'barbell squat gym workout',
   front_squat:      'front squat barbell gym',
   leg_press:        'leg press machine gym',
   leg_extension:    'leg extension machine gym',
-  leg_curl:         'leg curl machine gym',
+  leg_curl:         'lying leg curl machine gym',
   rdl:              'romanian deadlift gym',
   lunges:           'barbell lunge gym exercise',
   bulgarian_squat:  'bulgarian split squat gym',
@@ -62,43 +64,79 @@ const TERMS = {
   clean:            'power clean barbell gym',
   push_press:       'push press barbell gym',
   thruster:         'thruster barbell crossfit',
-  jump_rope:        'jump rope exercise',
+  jump_rope:        'jump rope exercise workout',
   run:              'running treadmill gym',
   rowing_machine:   'rowing machine exercise gym',
 }
 
-const cache = {}
-
-function useGiphy(exerciseId) {
-  const [url, setUrl] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const term = TERMS[exerciseId]
-    if (!term) { setLoading(false); return }
-    if (cache[exerciseId] !== undefined) { setUrl(cache[exerciseId]); setLoading(false); return }
-
-    // offset fixe par exercice pour toujours avoir le même résultat
-    const offset = Object.keys(TERMS).indexOf(exerciseId) % 5
-
-    fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(term)}&limit=1&offset=${offset}&rating=g&lang=en`)
-      .then(r => r.json())
-      .then(data => {
-        const gif = data?.data?.[0]?.images?.downsized?.url
-          || data?.data?.[0]?.images?.fixed_height?.url
-        cache[exerciseId] = gif || null
-        setUrl(gif || null)
-        setLoading(false)
-      })
-      .catch(() => { cache[exerciseId] = null; setLoading(false) })
-  }, [exerciseId])
-
-  return { url, loading }
-}
+// Cache mémoire session
+const memCache = {}
 
 export default function ExerciseGif({ exerciseId, exerciseName, muscles = [], size = 80, clickable = false }) {
-  const { url, loading } = useGiphy(exerciseId)
+  const { isCoach } = useAuth()
+  const [url, setUrl] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [offset, setOffset] = useState(Object.keys(TERMS).indexOf(exerciseId) % 5)
+  const [locked, setLocked] = useState(false)
+  const [locking, setLocking] = useState(false)
   const [showModal, setShowModal] = useState(false)
+
+  useEffect(() => {
+    // Charger le GIF verrouillé depuis Supabase
+    supabase.from('exercise_gifs').select('gif_url, locked').eq('exercise_id', exerciseId).maybeSingle()
+      .then(({ data }) => {
+        if (data?.locked && data?.gif_url) {
+          setUrl(data.gif_url)
+          setLocked(true)
+          setLoading(false)
+        } else {
+          fetchGiphy(offset)
+        }
+      })
+  }, [exerciseId])
+
+  async function fetchGiphy(off) {
+    setLoading(true)
+    const term = TERMS[exerciseId]
+    if (!term) { setLoading(false); return }
+    try {
+      const r = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(term)}&limit=1&offset=${off}&rating=g`)
+      const data = await r.json()
+      const gif = data?.data?.[0]?.images?.downsized?.url || data?.data?.[0]?.images?.fixed_height?.url
+      setUrl(gif || null)
+    } catch { setUrl(null) }
+    setLoading(false)
+  }
+
+  async function reload() {
+    if (locked) return
+    const newOffset = offset + 1
+    setOffset(newOffset)
+    await fetchGiphy(newOffset)
+  }
+
+  async function lockGif() {
+    if (!url) return
+    setLocking(true)
+    await supabase.from('exercise_gifs').upsert({
+      exercise_id: exerciseId,
+      gif_url: url,
+      locked: true
+    }, { onConflict: 'exercise_id' })
+    setLocked(true)
+    setLocking(false)
+  }
+
+  async function unlockGif() {
+    setLocking(true)
+    await supabase.from('exercise_gifs').upsert({
+      exercise_id: exerciseId,
+      gif_url: url,
+      locked: false
+    }, { onConflict: 'exercise_id' })
+    setLocked(false)
+    setLocking(false)
+  }
 
   if (!TERMS[exerciseId]) return null
 
@@ -112,17 +150,35 @@ export default function ExerciseGif({ exerciseId, exerciseName, muscles = [], si
 
   return (
     <>
-      <div onClick={() => clickable && setShowModal(true)}
-        style={{ position: 'relative', cursor: clickable ? 'pointer' : 'default', flexShrink: 0 }}>
-        <img src={url} alt={exerciseName}
-          style={{ width: size, height: size, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', display: 'block' }}
+      <div style={{ position: 'relative', flexShrink: 0 }}>
+        <img
+          src={url}
+          alt={exerciseName}
+          onClick={() => clickable && setShowModal(true)}
+          style={{ width: size, height: size, objectFit: 'cover', borderRadius: 8, border: `2px solid ${locked ? '#06d6a0' : 'var(--border)'}`, display: 'block', cursor: clickable ? 'pointer' : 'default' }}
         />
-        {clickable && (
-          <div style={{ position: 'absolute', inset: 0, borderRadius: 8, background: 'rgba(0,0,0,0.45)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.2s' }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '0'}
-          >
-            <span style={{ fontSize: 22 }}>🔍</span>
+
+        {/* Boutons coach */}
+        {isCoach && (
+          <div style={{ position: 'absolute', bottom: -28, left: 0, display: 'flex', gap: 4 }}>
+            {!locked && (
+              <button
+                onClick={reload}
+                title="Recharger un autre GIF"
+                style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 6, padding: '3px 6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: 'var(--text2)' }}
+              >
+                <RefreshCw size={10} /> Autre
+              </button>
+            )}
+            <button
+              onClick={locked ? unlockGif : lockGif}
+              disabled={locking}
+              title={locked ? 'Déverrouiller' : 'Verrouiller ce GIF'}
+              style={{ background: locked ? 'rgba(6,214,160,0.15)' : 'var(--bg3)', border: `1px solid ${locked ? '#06d6a0' : 'var(--border)'}`, borderRadius: 6, padding: '3px 6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: locked ? '#06d6a0' : 'var(--text2)' }}
+            >
+              {locked ? <Lock size={10} /> : <Unlock size={10} />}
+              {locked ? 'Verrouillé' : 'Verrouiller'}
+            </button>
           </div>
         )}
       </div>
@@ -135,6 +191,18 @@ export default function ExerciseGif({ exerciseId, exerciseName, muscles = [], si
           <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 440, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
             <h2 style={{ fontFamily: 'Bebas Neue', fontSize: 32, textAlign: 'center' }}>{exerciseName}</h2>
             <img src={url} alt={exerciseName} style={{ width: '100%', maxWidth: 360, borderRadius: 16, border: '1px solid var(--border)' }} />
+            {isCoach && (
+              <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+                {!locked && (
+                  <button onClick={reload} className="btn-ghost" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px' }}>
+                    <RefreshCw size={16} /> Autre GIF
+                  </button>
+                )}
+                <button onClick={locked ? unlockGif : lockGif} className="btn-primary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', background: locked ? '#06d6a0' : 'var(--accent)' }}>
+                  {locked ? <><Unlock size={16} /> Déverrouiller</> : <><Lock size={16} /> Verrouiller</>}
+                </button>
+              </div>
+            )}
             {muscles.length > 0 && (
               <div className="card" style={{ width: '100%', padding: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
                 <BodySVG activeMuscles={muscles} size={70} showBoth={true} />
