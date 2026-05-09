@@ -185,10 +185,7 @@ function MultiLineChart({ measurements }) {
             <g key={s.key}>
               {points.length > 1 && <path d={pathD} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />}
               {points.map((p, i) => (
-                <g key={i}>
-                  <circle cx={p.x} cy={p.y} r={3} fill={s.color} />
-                  <text x={p.x} y={p.y - 6} textAnchor="middle" fontSize="7" fill={s.color}>{p.value}</text>
-                </g>
+                <circle key={i} cx={p.x} cy={p.y} r={3} fill={s.color} />
               ))}
             </g>
           )
