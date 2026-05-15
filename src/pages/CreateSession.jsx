@@ -14,6 +14,7 @@ export default function CreateSession() {
   const preselectedClient = searchParams.get('client')
   const preselectedName = searchParams.get('name')
   const [clients, setClients] = useState([])
+  const [customExercises, setCustomExercises] = useState([])
   const [sessionName, setSessionName] = useState('')
   const [clientId, setClientId] = useState('')
   const [exerciseBlocks, setExerciseBlocks] = useState([])
@@ -24,6 +25,7 @@ export default function CreateSession() {
 
   useEffect(() => {
     fetchClients()
+    fetchCustomExercises()
     if (preselectedClient) setClientId(preselectedClient)
     if (editId) loadExistingSession(editId)
   }, [])
@@ -35,6 +37,23 @@ export default function CreateSession() {
       setClientId(data.client_id)
       const exos = JSON.parse(data.exercises || '[]')
       setExerciseBlocks(exos)
+    }
+  }
+
+  async function fetchCustomExercises() {
+    const { data } = await supabase.from('custom_exercises').select('*').order('name')
+    if (data) {
+      const formatted = data.map(ex => ({
+        id: ex.id,
+        name: ex.name,
+        category: ex.category || 'Custom',
+        muscles: JSON.parse(ex.muscles || '[]'),
+        equipment: ex.equipment || 'Aucun',
+        image1: ex.image1,
+        image2: ex.image2,
+        isCustom: true,
+      }))
+      setCustomExercises(formatted)
     }
   }
 
@@ -79,7 +98,8 @@ export default function CreateSession() {
   const allMuscles = [...new Set(exerciseBlocks.flatMap(b => b.exercise.muscles))]
   const totalSets = exerciseBlocks.reduce((acc, b) => acc + b.sets.length, 0)
 
-  const filteredExercises = EXERCISES.filter(e => {
+  const allExercises = [...EXERCISES, ...customExercises]
+  const filteredExercises = allExercises.filter(e => {
     const matchSearch = e.name.toLowerCase().includes(search.toLowerCase())
     const matchCat = filterCategory === 'Tous' || e.category === filterCategory
     return matchSearch && matchCat
@@ -275,7 +295,7 @@ export default function CreateSession() {
               </div>
               {/* Filtres catégories */}
               <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
-                {['Tous', ...EXERCISE_CATEGORIES].map(cat => (
+                {['Tous', ...EXERCISE_CATEGORIES, 'Custom'].map(cat => (
                   <button
                     key={cat}
                     onClick={() => setFilterCategory(cat)}
