@@ -118,7 +118,8 @@ export default function ExercisesManager() {
   useEffect(() => { fetchExercises() }, [])
 
   async function fetchExercises() {
-    const { data } = await supabase.from('custom_exercises').select('*').order('name')
+    const { data, error } = await supabase.from('custom_exercises').select('*').order('name')
+    console.log('exercises:', data, error)
     setExercises(data || [])
   }
 
@@ -137,8 +138,8 @@ export default function ExercisesManager() {
     if (error) { alert('Erreur: ' + error.message); setSaving(false); return }
     setForm({ name: '', category: 'Musculation', muscles: [], equipment: 'Barre', description: '', image1: null, image2: null })
     setShowForm(false)
-    fetchExercises()
     setSaving(false)
+    await fetchExercises()
   }
 
   async function deleteExercise(id) {
