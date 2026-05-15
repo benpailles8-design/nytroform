@@ -65,7 +65,7 @@ export default function CreateSession() {
   function addExercise(exercise) {
     setExerciseBlocks(prev => [...prev, {
       exercise,
-      sets: [{ type: 'normal', reps: 10, rest: 90 }]
+      sets: [{ type: 'normal', reps: 10, rest: 90, weight: '' }]
     }])
     setShowExercisePicker(false)
   }
@@ -76,7 +76,7 @@ export default function CreateSession() {
 
   function addSet(blockIdx) {
     setExerciseBlocks(prev => prev.map((block, i) =>
-      i === blockIdx ? { ...block, sets: [...block.sets, { type: 'normal', reps: 10, rest: 90 }] } : block
+      i === blockIdx ? { ...block, sets: [...block.sets, { type: 'normal', reps: 10, rest: 90, weight: '' }] } : block
     ))
   }
 
@@ -204,15 +204,16 @@ export default function CreateSession() {
             {/* Séries */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {/* Header */}
-              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 60px 60px 24px', gap: '6px', alignItems: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 55px 55px 55px 24px', gap: '6px', alignItems: 'center' }}>
                 <span style={{ fontSize: '10px', color: 'var(--text2)', textTransform: 'uppercase' }}>Type</span>
-                <span style={{ fontSize: '10px', color: 'var(--text2)', textTransform: 'uppercase' }}>Répétitions</span>
+                <span style={{ fontSize: '10px', color: 'var(--text2)', textTransform: 'uppercase' }}>Reps</span>
                 <span style={{ fontSize: '10px', color: 'var(--text2)', textTransform: 'uppercase' }}>Repos</span>
+                <span style={{ fontSize: '10px', color: 'var(--text2)', textTransform: 'uppercase' }}>Kg</span>
                 <span></span>
                 <span></span>
               </div>
               {block.sets.map((set, setIdx) => (
-                <div key={setIdx} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 60px 60px 24px', gap: '6px', alignItems: 'center' }}>
+                <div key={setIdx} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 55px 55px 55px 24px', gap: '6px', alignItems: 'center' }}>
                   <select
                     value={set.type}
                     onChange={e => updateSet(blockIdx, setIdx, 'type', e.target.value)}
@@ -234,6 +235,15 @@ export default function CreateSession() {
                     style={{ padding: '6px 8px', fontSize: '13px' }}
                     placeholder="90s"
                     min="0"
+                  />
+                  <input
+                    type="number"
+                    value={set.weight || ''}
+                    onChange={e => updateSet(blockIdx, setIdx, 'weight', e.target.value)}
+                    style={{ padding: '6px 8px', fontSize: '13px' }}
+                    placeholder="kg"
+                    min="0"
+                    step="0.5"
                   />
                   <span style={{ fontSize: '11px', color: 'var(--text2)', textAlign: 'center' }}>#{setIdx + 1}</span>
                   <button onClick={() => removeSet(blockIdx, setIdx)} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', padding: 0 }}>
