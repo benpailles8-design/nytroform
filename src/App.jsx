@@ -9,6 +9,7 @@ import Messages from './pages/Messages'
 import Clients from './pages/Clients'
 import ClientProfile from './pages/ClientProfile'
 import Schedule from './pages/Schedule'
+import ExercisesManager from './pages/ExercisesManager'
 import Progression from './pages/Progression'
 import Navbar from './components/Navbar'
 
@@ -43,6 +44,7 @@ function AppRoutes() {
       <Route path="/client/:clientId" element={<ProtectedRoute coachOnly><AppLayout><ClientProfile /></AppLayout></ProtectedRoute>} />
       <Route path="/schedule" element={<ProtectedRoute><AppLayout><Schedule /></AppLayout></ProtectedRoute>} />
       <Route path="/progression" element={<ProtectedRoute><AppLayout><Progression /></AppLayout></ProtectedRoute>} />
+      <Route path="/exercises" element={<ProtectedRoute><AppLayout><ExercisesManager /></AppLayout></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
   )

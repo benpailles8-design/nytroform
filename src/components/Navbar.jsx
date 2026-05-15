@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { LayoutDashboard, User, MessageCircle, Users, CalendarDays, TrendingUp } from 'lucide-react'
+import { LayoutDashboard, User, MessageCircle, Users, CalendarDays, TrendingUp, Dumbbell } from 'lucide-react'
 
 export default function Navbar() {
   const { isCoach } = useAuth()
@@ -8,15 +8,15 @@ export default function Navbar() {
   const links = isCoach ? [
     { to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Séances' },
     { to: '/clients', icon: <Users size={20} />, label: 'Clients' },
+    { to: '/exercises', icon: <Dumbbell size={20} />, label: 'Exos' },
     { to: '/schedule', icon: <CalendarDays size={20} />, label: 'Planning' },
-    { to: '/progression', icon: <TrendingUp size={20} />, label: 'Stats' },
     { to: '/messages', icon: <MessageCircle size={20} />, label: 'Messages' },
   ] : [
     { to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Séances' },
+    { to: '/exercises', icon: <Dumbbell size={20} />, label: 'Exos' },
     { to: '/schedule', icon: <CalendarDays size={20} />, label: 'Planning' },
     { to: '/progression', icon: <TrendingUp size={20} />, label: 'Stats' },
     { to: '/profile', icon: <User size={20} />, label: 'Profil' },
-    { to: '/messages', icon: <MessageCircle size={20} />, label: 'Messages' },
   ]
 
   return (
@@ -29,11 +29,11 @@ export default function Navbar() {
     }}>
       {links.map(link => (
         <NavLink key={link.to} to={link.to} style={({ isActive }) => ({
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
           color: isActive ? 'var(--accent)' : 'var(--text2)',
-          textDecoration: 'none', fontSize: '10px', letterSpacing: '0.05em',
+          textDecoration: 'none', fontSize: '9px', letterSpacing: '0.05em',
           textTransform: 'uppercase', fontWeight: 500, transition: 'color 0.2s',
-          padding: '4px 16px',
+          padding: '4px 8px',
         })}>
           {link.icon}
           {link.label}
