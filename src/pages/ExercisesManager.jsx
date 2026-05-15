@@ -317,7 +317,7 @@ export default function ExercisesManager() {
                 </div>
               </div>
 
-              {isOpen && editingCustom === (ex.isCustom ? ex.id : null) && (
+              {isOpen && ex.isCustom && editingCustom === ex.id && (
                 <div style={{ borderTop: '1px solid var(--border)', padding: 16, background: 'rgba(230,57,70,0.03)' }}>
                   <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent)', marginBottom: 14 }}>✏️ MODE ÉDITION</p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
