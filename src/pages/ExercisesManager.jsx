@@ -415,21 +415,19 @@ export default function ExercisesManager() {
                   </div>
 
                   {/* Muscles - toujours visible */}
-                  {(
-                    <div style={{ marginBottom: 12 }}>
+                  <div style={{ marginBottom: 12 }}>
                       <p style={{ fontSize: 11, color: 'var(--text2)', textTransform: 'uppercase', marginBottom: 8 }}>Muscles ciblés</p>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <BodySVG activeMuscles={ex.muscles || []} size={60} showBoth={true} />
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, alignContent: 'flex-start' }}>
-                          {ex.muscles.map(m => (
+                          {(ex.muscles || []).map(m => (
                             <span key={m} style={{ background: 'rgba(230,57,70,0.12)', border: '1px solid rgba(230,57,70,0.3)', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: 'var(--accent)', fontWeight: 600 }}>
                               {MUSCLE_GROUPS[m] || m}
                             </span>
                           ))}
                         </div>
                       </div>
-                    </div>
-                  )}
+                  </div>
 
                   {/* Description */}
                   {isCoach && !ex.isCustom && (pendingImages[ex.id + '_image1'] !== undefined || pendingImages[ex.id + '_image2'] !== undefined) && (
