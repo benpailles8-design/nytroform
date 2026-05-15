@@ -22,7 +22,7 @@ async function compressImage(file, maxWidth = 600, quality = 0.65) {
   })
 }
 
-function ImageSlot({ value, onChange, label, uploading }) {
+function ImageSlot({ value, onChange, label, uploading, readOnly }) {
   const inputRef = useRef()
 
   async function handleFile(file) {
@@ -32,6 +32,7 @@ function ImageSlot({ value, onChange, label, uploading }) {
   }
 
   async function handlePaste(e) {
+    if (readOnly) return
     const items = e.clipboardData?.items
     if (!items) return
     for (const item of items) {
@@ -42,14 +43,18 @@ function ImageSlot({ value, onChange, label, uploading }) {
   if (value) return (
     <div style={{ position: 'relative' }}>
       <img src={value} alt={label} style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)', display: 'block', maxHeight: 200, objectFit: 'cover' }} />
-      <button onClick={() => onChange(null)} style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.75)', border: 'none', borderRadius: '50%', width: 26, height: 26, cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <X size={14} />
-      </button>
+      {!readOnly && (
+        <button onClick={() => onChange(null)} style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.75)', border: 'none', borderRadius: '50%', width: 26, height: 26, cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <X size={14} />
+        </button>
+      )}
     </div>
   )
 
+  if (readOnly) return null
+
   return (
-    <label style={{ border: '2px dashed var(--border)', borderRadius: 10, padding: '16px 8px', textAlign: 'center', cursor: 'pointer', background: 'var(--bg3)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'border-color 0.2s' }}
+    <label style={{ border: '2px dashed var(--border)', borderRadius: 10, padding: '16px 8px', textAlign: 'center', cursor: 'pointer', background: 'var(--bg3)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}
       onPaste={handlePaste} tabIndex={0}
       onDrop={async e => { e.preventDefault(); await handleFile(e.dataTransfer.files[0]) }}
       onDragOver={e => e.preventDefault()}
@@ -380,9 +385,10 @@ export default function ExercisesManager() {
                             <p style={{ fontSize: 10, color: 'var(--text2)', marginBottom: 4 }}>{label}</p>
                             <ImageSlot
                               value={val}
-                              onChange={isCoach ? async (newVal) => await saveClassicImage(ex.id, slot, newVal) : null}
+                              onChange={async (newVal) => await saveClassicImage(ex.id, slot, newVal)}
                               label={label}
                               uploading={savingImg === ex.id + slot}
+                              readOnly={!isCoach}
                             />
                           </div>
                         )
