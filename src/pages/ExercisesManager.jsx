@@ -391,7 +391,11 @@ export default function ExercisesManager() {
                         const val = slot === 'image1' ? ex.image1 : ex.image2
                         const label = idx === 0 ? 'Position départ' : 'Position arrivée'
                         if (ex.isCustom) {
-                          return val ? <img key={slot} src={val} alt={label} style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)' }} /> : null
+                          return val ? <img key={slot} src={val} alt={label} style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)' }} /> : (
+                            <div key={slot} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                              <p style={{ fontSize: 10, color: 'var(--text2)' }}>{label}</p>
+                            </div>
+                          )
                         }
                         if (!isCoach && !val) return null
                         return (
@@ -410,12 +414,12 @@ export default function ExercisesManager() {
                     </div>
                   </div>
 
-                  {/* Muscles */}
-                  {ex.muscles?.length > 0 && (
+                  {/* Muscles - toujours visible */}
+                  {(
                     <div style={{ marginBottom: 12 }}>
                       <p style={{ fontSize: 11, color: 'var(--text2)', textTransform: 'uppercase', marginBottom: 8 }}>Muscles ciblés</p>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <BodySVG activeMuscles={ex.muscles} size={60} showBoth={true} />
+                        <BodySVG activeMuscles={ex.muscles || []} size={60} showBoth={true} />
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, alignContent: 'flex-start' }}>
                           {ex.muscles.map(m => (
                             <span key={m} style={{ background: 'rgba(230,57,70,0.12)', border: '1px solid rgba(230,57,70,0.3)', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: 'var(--accent)', fontWeight: 600 }}>
