@@ -5,7 +5,7 @@ import { Plus, X, Search, Trash2, ChevronDown, ChevronUp, Image } from 'lucide-r
 import { MUSCLE_GROUPS, EXERCISE_CATEGORIES } from '../data/exercises'
 
 // Compression image canvas
-async function compressImage(file, maxWidth = 800, quality = 0.75) {
+async function compressImage(file, maxWidth = 600, quality = 0.6) {
   return new Promise((resolve) => {
     const img = new window.Image()
     const url = URL.createObjectURL(file)
@@ -23,7 +23,7 @@ async function compressImage(file, maxWidth = 800, quality = 0.75) {
 }
 
 // Compression depuis clipboard (paste)
-async function compressBase64(dataUrl, maxWidth = 800, quality = 0.75) {
+async function compressBase64(dataUrl, maxWidth = 600, quality = 0.6) {
   return new Promise((resolve) => {
     const img = new window.Image()
     img.onload = () => {
@@ -125,7 +125,7 @@ export default function ExercisesManager() {
   async function saveExercise() {
     if (!form.name.trim()) return
     setSaving(true)
-    await supabase.from('custom_exercises').insert({
+    const { error } = await supabase.from('custom_exercises').insert({
       name: form.name.trim(),
       category: form.category,
       muscles: JSON.stringify(form.muscles),
@@ -134,6 +134,7 @@ export default function ExercisesManager() {
       image1: form.image1,
       image2: form.image2,
     })
+    if (error) { alert('Erreur: ' + error.message); setSaving(false); return }
     setForm({ name: '', category: 'Musculation', muscles: [], equipment: 'Barre', description: '', image1: null, image2: null })
     setShowForm(false)
     fetchExercises()
