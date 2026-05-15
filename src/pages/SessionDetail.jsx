@@ -153,9 +153,10 @@ export default function SessionDetail() {
               onClick={() => setExpandedBlock(expandedBlock === blockIdx ? -1 : blockIdx)}
               style={{ padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}
             >
-              <div style={{ flexShrink: 0 }}>
-                
-              </div>
+              {(block.exercise.image1 || block.exercise.image2) && (
+                <img src={block.exercise.image1 || block.exercise.image2} alt={block.exercise.name}
+                  style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', flexShrink: 0 }} />
+              )}
               <div style={{ flex: 1 }}>
                 <p style={{ fontFamily: 'Bebas Neue', fontSize: '20px' }}>{block.exercise.name}</p>
                 <p style={{ fontSize: '11px', color: 'var(--text2)' }}>
@@ -168,10 +169,21 @@ export default function SessionDetail() {
             {/* Détail séries */}
             {expandedBlock === blockIdx && (
               <div style={{ borderTop: '1px solid var(--border)', padding: '16px' }}>
-                {/* GIF + muscles */}
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px', padding: '12px', background: 'var(--bg3)', borderRadius: '10px' }}>
-                  
-                  <div style={{ flex: 1 }}>
+                {/* Photos + muscles */}
+                <div style={{ marginBottom: '16px' }}>
+                  {(block.exercise.image1 || block.exercise.image2) && (
+                    <div style={{ display: 'grid', gridTemplateColumns: block.exercise.image1 && block.exercise.image2 ? '1fr 1fr' : '1fr', gap: 8, marginBottom: 12 }}>
+                      {block.exercise.image1 && (
+                        <img src={block.exercise.image1} alt="Position départ"
+                          style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)' }} />
+                      )}
+                      {block.exercise.image2 && (
+                        <img src={block.exercise.image2} alt="Position arrivée"
+                          style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)' }} />
+                      )}
+                    </div>
+                  )}
+                  <div style={{ padding: '12px', background: 'var(--bg3)', borderRadius: '10px' }}>
                     <BodySVG activeMuscles={block.exercise.muscles} size={60} showBoth={true} />
                   </div>
                 </div>
