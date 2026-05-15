@@ -83,6 +83,7 @@ export default function ExercisesManager() {
   const [expanded, setExpanded] = useState(null)
   const [saving, setSaving] = useState(false)
   const [savingImg, setSavingImg] = useState(null)
+  const [pendingImages, setPendingImages] = useState({}) // { 'exId_slot': base64 }
   const [editingCustom, setEditingCustom] = useState(null) // id de l'exercice custom en cours d'édition
   const [editForm, setEditForm] = useState({})
   const [form, setForm] = useState({ name: '', category: 'Musculation', muscles: [], equipment: 'Barre', description: '', image1: null, image2: null })
@@ -153,13 +154,26 @@ export default function ExercisesManager() {
   }
 
   async function saveClassicImage(exerciseId, slot, value) {
-    setSavingImg(exerciseId + slot)
+    // Stocker temporairement sans sauvegarder
+    setPendingImages(prev => ({ ...prev, [exerciseId + '_' + slot]: value }))
+    setExerciseImages(prev => ({ ...prev, [exerciseId]: { ...(prev[exerciseId] || {}), [slot]: value } }))
+  }
+
+  async function saveClassicImageToDB(exerciseId) {
+    setSavingImg(exerciseId)
     const current = exerciseImages[exerciseId] || {}
-    const updated = { ...current, [slot]: value }
-    await supabase.from('exercise_images').upsert({
-      exercise_id: exerciseId, image1: updated.image1 || null, image2: updated.image2 || null
+    const { error } = await supabase.from('exercise_images').upsert({
+      exercise_id: exerciseId, image1: current.image1 || null, image2: current.image2 || null
     }, { onConflict: 'exercise_id' })
-    setExerciseImages(prev => ({ ...prev, [exerciseId]: updated }))
+    if (error) alert('Erreur: ' + error.message)
+    else {
+      setPendingImages(prev => {
+        const next = { ...prev }
+        delete next[exerciseId + '_image1']
+        delete next[exerciseId + '_image2']
+        return next
+      })
+    }
     setSavingImg(null)
   }
 
@@ -414,6 +428,13 @@ export default function ExercisesManager() {
                   )}
 
                   {/* Description */}
+                  {isCoach && !ex.isCustom && (pendingImages[ex.id + '_image1'] !== undefined || pendingImages[ex.id + '_image2'] !== undefined) && (
+                    <button className="btn-primary" onClick={() => saveClassicImageToDB(ex.id)} disabled={savingImg === ex.id}
+                      style={{ width: '100%', padding: 12, marginBottom: 12, fontSize: 14 }}>
+                      {savingImg === ex.id ? 'Sauvegarde...' : '💾 Sauvegarder les photos'}
+                    </button>
+                  )}
+
                   {ex.isCustom ? (
                     editingCustom === ex.id ? null : (
                       ex.description && <div style={{ background: 'var(--bg3)', borderRadius: 8, padding: '10px 12px' }}>
