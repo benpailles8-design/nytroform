@@ -18,6 +18,8 @@ export default function SessionDetail() {
   const [loading, setLoading] = useState(true)
   const [expandedBlock, setExpandedBlock] = useState(0)
   const [saving, setSaving] = useState(false)
+  const [exerciseImages, setExerciseImages] = useState({}) // { exerciseId: { image1, image2 } }
+  const [uploadingImg, setUploadingImg] = useState(null)
 
   useEffect(() => { fetchSession() }, [id])
 
@@ -27,6 +29,7 @@ export default function SessionDetail() {
       setSession(data)
       const exos = JSON.parse(data.exercises || '[]')
       setExercises(exos)
+      await loadExerciseImages(exos)
 
       // Charger poids actuels
       const { data: weightData } = await supabase
@@ -55,6 +58,68 @@ export default function SessionDetail() {
       }
     }
     setLoading(false)
+  }
+
+  async function loadExerciseImages(exos) {
+    const ids = exos.map(b => b.exercise.id).filter(id => !id.includes('-')) // IDs classiques (pas UUID)
+    if (!ids.length) return
+    const { data } = await supabase.from('exercise_images').select('*').in('exercise_id', ids)
+    if (data) {
+      const map = {}
+      data.forEach(d => { map[d.exercise_id] = { image1: d.image1, image2: d.image2 } })
+      setExerciseImages(map)
+    }
+  }
+
+  async function compressAndSave(exerciseId, slot, file) {
+    if (!file || !file.type.startsWith('image/')) return
+    setUploadingImg(exerciseId + slot)
+    const img = new window.Image()
+    const url = URL.createObjectURL(file)
+    img.onload = async () => {
+      const canvas = document.createElement('canvas')
+      let { width, height } = img
+      const maxW = 600
+      if (width > maxW) { height = Math.round(height * maxW / width); width = maxW }
+      canvas.width = width; canvas.height = height
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+      URL.revokeObjectURL(url)
+      const compressed = canvas.toDataURL('image/jpeg', 0.65)
+
+      // Upsert dans exercise_images
+      const current = exerciseImages[exerciseId] || {}
+      const updated = { ...current, [slot]: compressed }
+      await supabase.from('exercise_images').upsert({
+        exercise_id: exerciseId,
+        image1: updated.image1 || null,
+        image2: updated.image2 || null,
+      }, { onConflict: 'exercise_id' })
+      setExerciseImages(prev => ({ ...prev, [exerciseId]: updated }))
+      setUploadingImg(null)
+    }
+    img.src = url
+  }
+
+  async function handlePasteImage(exerciseId, slot, e) {
+    const items = e.clipboardData?.items
+    if (!items) return
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        await compressAndSave(exerciseId, slot, item.getAsFile())
+        break
+      }
+    }
+  }
+
+  async function removeImage(exerciseId, slot) {
+    const current = exerciseImages[exerciseId] || {}
+    const updated = { ...current, [slot]: null }
+    await supabase.from('exercise_images').upsert({
+      exercise_id: exerciseId,
+      image1: updated.image1 || null,
+      image2: updated.image2 || null,
+    }, { onConflict: 'exercise_id' })
+    setExerciseImages(prev => ({ ...prev, [exerciseId]: updated }))
   }
 
   async function saveWeights() {
@@ -171,21 +236,64 @@ export default function SessionDetail() {
               <div style={{ borderTop: '1px solid var(--border)', padding: '16px' }}>
                 {/* Photos + muscles */}
                 <div style={{ marginBottom: '16px' }}>
-                  {(block.exercise.image1 || block.exercise.image2) && (
-                    <div style={{ display: 'grid', gridTemplateColumns: block.exercise.image1 && block.exercise.image2 ? '1fr 1fr' : '1fr', gap: 8, marginBottom: 12 }}>
-                      {block.exercise.image1 && (
-                        <img src={block.exercise.image1} alt="Position départ"
-                          style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)' }} />
-                      )}
-                      {block.exercise.image2 && (
-                        <img src={block.exercise.image2} alt="Position arrivée"
-                          style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)' }} />
-                      )}
-                    </div>
-                  )}
-                  <div style={{ padding: '12px', background: 'var(--bg3)', borderRadius: '10px' }}>
-                    <BodySVG activeMuscles={block.exercise.muscles} size={60} showBoth={true} />
-                  </div>
+                  {(() => {
+                    const exId = block.exercise.id
+                    const isCustom = block.exercise.isCustom
+                    const img1 = isCustom ? block.exercise.image1 : exerciseImages[exId]?.image1
+                    const img2 = isCustom ? block.exercise.image2 : exerciseImages[exId]?.image2
+                    return (
+                      <>
+                        {(img1 || img2) && (
+                          <div style={{ display: 'grid', gridTemplateColumns: img1 && img2 ? '1fr 1fr' : '1fr', gap: 8, marginBottom: 12 }}>
+                            {img1 && (
+                              <div style={{ position: 'relative' }}>
+                                <img src={img1} alt="Départ" style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)' }} />
+                                {isCoach && !isCustom && (
+                                  <button onClick={() => removeImage(exId, 'image1')} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.7)', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', color: 'white', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                                )}
+                              </div>
+                            )}
+                            {img2 && (
+                              <div style={{ position: 'relative' }}>
+                                <img src={img2} alt="Arrivée" style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)' }} />
+                                {isCoach && !isCustom && (
+                                  <button onClick={() => removeImage(exId, 'image2')} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.7)', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', color: 'white', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {isCoach && !isCustom && (
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+                            {['image1', 'image2'].map(slot => {
+                              const hasImg = slot === 'image1' ? !!img1 : !!img2
+                              if (hasImg) return null
+                              const label = slot === 'image1' ? 'Photo départ' : 'Photo arrivée'
+                              return (
+                                <label key={slot} style={{ border: '2px dashed var(--border)', borderRadius: 8, padding: '12px 8px', textAlign: 'center', cursor: 'pointer', background: 'var(--bg3)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
+                                  onPaste={e => handlePasteImage(exId, slot, e)} tabIndex={0}>
+                                  {uploadingImg === exId + slot ? (
+                                    <span style={{ fontSize: 11, color: 'var(--text2)' }}>Compression...</span>
+                                  ) : (
+                                    <>
+                                      <span style={{ fontSize: 18 }}>📷</span>
+                                      <span style={{ fontSize: 10, color: 'var(--text2)' }}>{label}</span>
+                                      <span style={{ fontSize: 9, color: 'var(--text2)', opacity: 0.7 }}>Colle ou clique</span>
+                                    </>
+                                  )}
+                                  <input type="file" accept="image/*" style={{ display: 'none' }}
+                                    onChange={e => e.target.files[0] && compressAndSave(exId, slot, e.target.files[0])} />
+                                </label>
+                              )
+                            })}
+                          </div>
+                        )}
+                        <div style={{ padding: '12px', background: 'var(--bg3)', borderRadius: '10px' }}>
+                          <BodySVG activeMuscles={block.exercise.muscles} size={60} showBoth={true} />
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
                 {/* Headers */}
                 <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 80px 80px', gap: '8px', marginBottom: '10px' }}>
