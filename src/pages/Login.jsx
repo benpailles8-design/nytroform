@@ -6,6 +6,23 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resetMode, setResetMode] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetMsg, setResetMsg] = useState(null)
+  const [resetLoading, setResetLoading] = useState(false)
+
+  async function handleReset(e) {
+    e.preventDefault()
+    if (!resetEmail) return
+    setResetLoading(true)
+    setResetMsg(null)
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: window.location.origin + '/reset-password'
+    })
+    if (error) setResetMsg({ type: 'error', text: 'Erreur : ' + error.message })
+    else setResetMsg({ type: 'success', text: 'Email envoyé ! Vérifie ta boîte mail.' })
+    setResetLoading(false)
+  }
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -46,49 +63,50 @@ export default function Login() {
             Accès réservé aux membres
           </p>
 
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{ fontSize: '12px', color: 'var(--text2)', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="ton@email.com"
-                required
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: '12px', color: 'var(--text2)', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
-                Mot de passe
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
-            </div>
-
-            {error && (
-              <div style={{
-                background: 'rgba(230, 57, 70, 0.1)',
-                border: '1px solid var(--accent)',
-                borderRadius: '8px',
-                padding: '10px 14px',
-                color: 'var(--accent)',
-                fontSize: '14px'
-              }}>
-                {error}
+          {!resetMode ? (
+            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ fontSize: '12px', color: 'var(--text2)', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Email</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="ton@email.com" required />
               </div>
-            )}
-
-            <button className="btn-primary" type="submit" disabled={loading} style={{ marginTop: '8px', padding: '14px', fontSize: '16px', letterSpacing: '0.05em' }}>
-              {loading ? 'Connexion...' : 'SE CONNECTER'}
-            </button>
-          </form>
+              <div>
+                <label style={{ fontSize: '12px', color: 'var(--text2)', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Mot de passe</label>
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
+              </div>
+              {error && (
+                <div style={{ background: 'rgba(230,57,70,0.1)', border: '1px solid var(--accent)', borderRadius: '8px', padding: '10px 14px', color: 'var(--accent)', fontSize: '14px' }}>
+                  {error}
+                </div>
+              )}
+              <button className="btn-primary" type="submit" disabled={loading} style={{ marginTop: '8px', padding: '14px', fontSize: '16px', letterSpacing: '0.05em' }}>
+                {loading ? 'Connexion...' : 'SE CONNECTER'}
+              </button>
+              <button type="button" onClick={() => { setResetMode(true); setResetMsg(null) }} style={{ background: 'none', border: 'none', color: 'var(--text2)', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+                Mot de passe oublié ?
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <p style={{ color: 'var(--text2)', fontSize: '13px' }}>
+                Entre ton adresse email et on t'envoie un lien pour réinitialiser ton mot de passe.
+              </p>
+              <div>
+                <label style={{ fontSize: '12px', color: 'var(--text2)', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Email</label>
+                <input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="ton@email.com" required />
+              </div>
+              {resetMsg && (
+                <div style={{ background: resetMsg.type === 'success' ? 'rgba(6,214,160,0.1)' : 'rgba(230,57,70,0.1)', border: '1px solid ' + (resetMsg.type === 'success' ? '#06d6a0' : 'var(--accent)'), borderRadius: '8px', padding: '10px 14px', color: resetMsg.type === 'success' ? '#06d6a0' : 'var(--accent)', fontSize: '14px' }}>
+                  {resetMsg.text}
+                </div>
+              )}
+              <button className="btn-primary" type="submit" disabled={resetLoading} style={{ padding: '14px', fontSize: '16px' }}>
+                {resetLoading ? 'Envoi...' : 'ENVOYER LE LIEN'}
+              </button>
+              <button type="button" onClick={() => { setResetMode(false); setResetMsg(null) }} style={{ background: 'none', border: 'none', color: 'var(--text2)', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+                ← Retour à la connexion
+              </button>
+            </form>
+          )}
         </div>
 
         <p style={{ textAlign: 'center', color: 'var(--text2)', fontSize: '12px', marginTop: '24px' }}>

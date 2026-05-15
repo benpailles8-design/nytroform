@@ -10,6 +10,7 @@ import Clients from './pages/Clients'
 import ClientProfile from './pages/ClientProfile'
 import Schedule from './pages/Schedule'
 import ExercisesManager from './pages/ExercisesManager'
+import ResetPassword from './pages/ResetPassword'
 import Progression from './pages/Progression'
 import Navbar from './components/Navbar'
 
@@ -45,6 +46,7 @@ function AppRoutes() {
       <Route path="/schedule" element={<ProtectedRoute><AppLayout><Schedule /></AppLayout></ProtectedRoute>} />
       <Route path="/progression" element={<ProtectedRoute><AppLayout><Progression /></AppLayout></ProtectedRoute>} />
       <Route path="/exercises" element={<ProtectedRoute><AppLayout><ExercisesManager /></AppLayout></ProtectedRoute>} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
   )
