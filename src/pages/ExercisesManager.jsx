@@ -78,6 +78,8 @@ export default function ExercisesManager() {
   const [expanded, setExpanded] = useState(null)
   const [saving, setSaving] = useState(false)
   const [savingImg, setSavingImg] = useState(null)
+  const [editingCustom, setEditingCustom] = useState(null) // id de l'exercice custom en cours d'édition
+  const [editForm, setEditForm] = useState({})
   const [form, setForm] = useState({ name: '', category: 'Musculation', muscles: [], equipment: 'Barre', description: '', image1: null, image2: null })
 
   useEffect(() => { fetchAll() }, [])
@@ -110,6 +112,33 @@ export default function ExercisesManager() {
     setShowForm(false)
     setSaving(false)
     await fetchAll()
+  }
+
+  async function updateCustomExercise() {
+    if (!editingCustom) return
+    setSaving(true)
+    const { error } = await supabase.from('custom_exercises').update({
+      name: editForm.name,
+      category: editForm.category,
+      muscles: JSON.stringify(editForm.muscles),
+      equipment: editForm.equipment,
+      description: editForm.description,
+      image1: editForm.image1,
+      image2: editForm.image2,
+    }).eq('id', editingCustom)
+    if (error) { alert('Erreur: ' + error.message) }
+    else { setEditingCustom(null); await fetchAll() }
+    setSaving(false)
+  }
+
+  function startEdit(ex) {
+    setEditingCustom(ex.id)
+    setEditForm({
+      name: ex.name, category: ex.category,
+      muscles: ex.muscles || [], equipment: ex.equipment,
+      description: ex.description || '',
+      image1: ex.image1 || null, image2: ex.image2 || null,
+    })
   }
 
   async function deleteCustom(id) {
@@ -273,14 +302,62 @@ export default function ExercisesManager() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {isCoach && ex.isCustom && (
-                    <button onClick={e => { e.stopPropagation(); deleteCustom(ex.id) }}
-                      style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', padding: 4 }}>
-                      <Trash2 size={14} />
-                    </button>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button onClick={e => { e.stopPropagation(); if (editingCustom === ex.id) setEditingCustom(null); else { startEdit(ex); setExpanded(ex.id) } }}
+                        style={{ background: 'none', border: 'none', color: editingCustom === ex.id ? 'var(--accent)' : 'var(--text2)', cursor: 'pointer', padding: 4, fontSize: 13 }}>
+                        ✏️
+                      </button>
+                      <button onClick={e => { e.stopPropagation(); deleteCustom(ex.id) }}
+                        style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', padding: 4 }}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   )}
                   {isOpen ? <ChevronUp size={16} style={{ color: 'var(--text2)' }} /> : <ChevronDown size={16} style={{ color: 'var(--text2)' }} />}
                 </div>
               </div>
+
+              {isOpen && editingCustom === (ex.isCustom ? ex.id : null) && (
+                <div style={{ borderTop: '1px solid var(--border)', padding: 16, background: 'rgba(230,57,70,0.03)' }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent)', marginBottom: 14 }}>✏️ MODE ÉDITION</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <input value={editForm.name || ''} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} placeholder="Nom" />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <select value={editForm.category || ''} onChange={e => setEditForm(f => ({ ...f, category: e.target.value }))}>
+                        {EXERCISE_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                      </select>
+                      <select value={editForm.equipment || ''} onChange={e => setEditForm(f => ({ ...f, equipment: e.target.value }))}>
+                        {['Barre','Haltères','Machine','Câble','Poids de corps','Kettlebell','Élastique','Aucun'].map(eq => <option key={eq}>{eq}</option>)}
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                      {Object.entries(MUSCLE_GROUPS).map(([key, label]) => (
+                        <button key={key} onClick={() => setEditForm(f => ({ ...f, muscles: (f.muscles||[]).includes(key) ? f.muscles.filter(m=>m!==key) : [...(f.muscles||[]), key] }))}
+                          style={{ background: (editForm.muscles||[]).includes(key) ? 'var(--accent)' : 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 20, padding: '3px 9px', fontSize: 11, color: 'var(--text)', cursor: 'pointer' }}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <textarea value={editForm.description || ''} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} placeholder="Description..." rows={3} style={{ resize: 'vertical' }} />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <div>
+                        <p style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 5 }}>Photo départ</p>
+                        <ImageSlot value={editForm.image1} onChange={v => setEditForm(f => ({ ...f, image1: v }))} label="Position départ" />
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 5 }}>Photo arrivée</p>
+                        <ImageSlot value={editForm.image2} onChange={v => setEditForm(f => ({ ...f, image2: v }))} label="Position arrivée" />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button className="btn-primary" onClick={updateCustomExercise} disabled={saving} style={{ flex: 1, padding: 12 }}>
+                        {saving ? 'Sauvegarde...' : '✅ Sauvegarder'}
+                      </button>
+                      <button className="btn-ghost" onClick={() => setEditingCustom(null)} style={{ padding: 12 }}>Annuler</button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {isOpen && (
                 <div style={{ borderTop: '1px solid var(--border)', padding: 16 }}>
@@ -332,9 +409,11 @@ export default function ExercisesManager() {
 
                   {/* Description */}
                   {ex.isCustom ? (
-                    ex.description && <div style={{ background: 'var(--bg3)', borderRadius: 8, padding: '10px 12px' }}>
-                      <p style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--text2)' }}>{ex.description}</p>
-                    </div>
+                    editingCustom === ex.id ? null : (
+                      ex.description && <div style={{ background: 'var(--bg3)', borderRadius: 8, padding: '10px 12px' }}>
+                        <p style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--text2)' }}>{ex.description}</p>
+                      </div>
+                    )
                   ) : isCoach ? (
                     <div>
                       <p style={{ fontSize: 11, color: 'var(--text2)', textTransform: 'uppercase', marginBottom: 6 }}>Description · <span style={{ color: 'var(--accent)' }}>Modifiable</span></p>
