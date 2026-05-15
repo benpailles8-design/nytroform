@@ -418,36 +418,9 @@ export default function ExercisesManager() {
                   <div style={{ marginBottom: 12, padding: 12, background: 'var(--bg3)', borderRadius: 10 }}>
                     <p style={{ fontSize: 11, color: 'var(--text2)', textTransform: 'uppercase', marginBottom: 10 }}>Muscles ciblés</p>
                     <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <p style={{ fontSize: 9, color: 'var(--text2)', marginBottom: 2 }}>Face</p>
-                          <svg viewBox="0 0 300 450" width={55} height={82}>
-                            <g opacity="0.12" fill="#ffffff"><ellipse cx="150" cy="52" rx="26" ry="30" /><rect x="138" y="78" width="24" height="20" rx="5" /><path d="M 102 98 C 90 102 76 114 74 138 L 70 242 L 230 242 L 226 138 C 224 114 210 102 198 98 Z" /><path d="M 74 135 C 62 140 54 162 56 202 L 86 260 L 92 202 Z" /><path d="M 226 135 C 238 140 246 162 244 202 L 214 260 L 208 202 Z" /><path d="M 112 240 L 104 395 L 140 395 L 150 240 Z" /><path d="M 188 240 L 196 395 L 160 395 L 150 240 Z" /></g>
-                            {(ex.muscles||[]).includes('chest') && <path d="M 108 118 C 102 112 118 105 135 108 L 148 155 C 132 158 112 150 108 138 Z M 192 118 C 198 112 182 105 165 108 L 152 155 C 168 158 188 150 192 138 Z" fill="#e63946" opacity="0.9" />}
-                            {(ex.muscles||[]).includes('shoulders') && <path d="M 88 108 C 78 100 72 118 76 132 C 78 140 86 146 96 142 C 106 138 110 126 106 114 Z M 212 108 C 222 100 228 118 224 132 C 222 140 214 146 204 142 C 194 138 190 126 194 114 Z" fill="#e63946" opacity="0.9" />}
-                            {(ex.muscles||[]).includes('biceps') && <path d="M 78 144 C 70 150 66 166 68 180 C 70 190 78 196 88 194 C 98 192 102 180 100 168 C 98 156 88 140 78 144 Z M 222 144 C 230 150 234 166 232 180 C 230 190 222 196 212 194 C 202 192 198 180 200 168 C 202 156 212 140 222 144 Z" fill="#e63946" opacity="0.9" />}
-                            {(ex.muscles||[]).includes('abs') && <path d="M 138 160 L 162 160 L 160 182 L 140 182 Z M 137 186 L 151 186 L 150 206 L 138 206 Z M 149 186 L 163 186 L 162 206 L 150 206 Z" fill="#e63946" opacity="0.9" />}
-                            {(ex.muscles||[]).includes('quads') && <path d="M 120 242 C 110 248 104 268 106 288 C 108 308 120 322 132 320 C 144 318 150 304 148 284 C 146 264 136 238 120 242 Z M 180 242 C 190 248 196 268 194 288 C 192 308 180 322 168 320 C 156 318 150 304 152 284 C 154 264 164 238 180 242 Z" fill="#e63946" opacity="0.9" />}
-                            {(ex.muscles||[]).includes('calves') && <path d="M 118 332 C 110 338 106 356 110 372 C 113 384 122 390 130 386 C 138 382 140 368 138 354 C 136 340 126 328 118 332 Z M 182 332 C 190 338 194 356 190 372 C 187 384 178 390 170 386 C 162 382 160 368 162 354 C 164 340 174 328 182 332 Z" fill="#e63946" opacity="0.9" />}
-                            {(ex.muscles||[]).includes('traps') && <path d="M 135 82 C 128 88 124 98 128 106 C 136 110 150 112 150 112 C 150 112 164 110 172 106 C 176 98 172 88 165 82 Z" fill="#e63946" opacity="0.9" />}
-                          </svg>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <p style={{ fontSize: 9, color: 'var(--text2)', marginBottom: 2 }}>Dos</p>
-                          <svg viewBox="0 0 300 450" width={55} height={82}>
-                            <g opacity="0.12" fill="#ffffff"><ellipse cx="150" cy="52" rx="26" ry="30" /><rect x="138" y="78" width="24" height="20" rx="5" /><path d="M 102 98 C 90 102 76 114 74 138 L 70 242 L 230 242 L 226 138 C 224 114 210 102 198 98 Z" /><path d="M 74 135 C 62 140 54 162 56 202 L 86 260 L 92 202 Z" /><path d="M 226 135 C 238 140 246 162 244 202 L 214 260 L 208 202 Z" /><path d="M 112 240 L 104 395 L 140 395 L 150 240 Z" /><path d="M 188 240 L 196 395 L 160 395 L 150 240 Z" /></g>
-                            {(ex.muscles||[]).includes('back') && <path d="M 112 122 C 102 130 98 150 102 168 C 106 182 118 188 132 184 C 146 180 150 165 150 150 Z M 188 122 C 198 130 202 150 198 168 C 194 182 182 188 168 184 C 154 180 150 165 150 150 Z" fill="#e63946" opacity="0.9" />}
-                            {(ex.muscles||[]).includes('lats') && <path d="M 100 152 C 90 164 88 184 94 200 C 98 212 110 216 120 210 C 130 204 132 188 128 172 Z M 200 152 C 210 164 212 184 206 200 C 202 212 190 216 180 210 C 170 204 168 188 172 172 Z" fill="#e63946" opacity="0.9" />}
-                            {(ex.muscles||[]).includes('lower_back') && <path d="M 130 214 C 122 220 120 234 122 246 C 124 256 132 262 142 260 C 152 258 156 246 154 234 Z M 170 214 C 178 220 180 234 178 246 C 176 256 168 262 158 260 C 148 258 144 246 146 234 Z" fill="#e63946" opacity="0.9" />}
-                            {(ex.muscles||[]).includes('glutes') && <path d="M 116 252 C 106 260 102 278 106 294 C 110 308 122 314 134 308 C 146 302 150 286 146 270 Z M 184 252 C 194 260 198 278 194 294 C 190 308 178 314 166 308 C 154 302 150 286 154 270 Z" fill="#e63946" opacity="0.9" />}
-                            {(ex.muscles||[]).includes('hamstrings') && <path d="M 118 314 C 108 322 104 342 108 360 C 112 374 124 380 134 374 C 144 368 146 352 142 336 Z M 182 314 C 192 322 196 342 192 360 C 188 374 176 380 166 374 C 156 368 154 352 158 336 Z" fill="#e63946" opacity="0.9" />}
-                            {(ex.muscles||[]).includes('triceps') && <path d="M 76 144 C 68 150 64 168 66 182 C 68 194 76 200 86 198 C 96 196 100 182 98 168 Z M 224 144 C 232 150 236 168 234 182 C 232 194 224 200 214 198 C 204 196 200 182 202 168 Z" fill="#e63946" opacity="0.9" />}
-                            {(ex.muscles||[]).includes('traps') && <path d="M 130 82 C 120 88 114 100 118 112 C 128 118 150 122 150 122 C 150 122 172 118 182 112 C 186 100 180 88 170 82 Z" fill="#e63946" opacity="0.9" />}
-                          </svg>
-                        </div>
-                      </div>
+                      <BodySVG activeMuscles={ex.muscles || []} size={55} showBoth={true} />
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, alignContent: 'flex-start' }}>
-                        {(ex.muscles||[]).map(m => (
+                        {(ex.muscles || []).map(m => (
                           <span key={m} style={{ background: 'rgba(230,57,70,0.12)', border: '1px solid rgba(230,57,70,0.3)', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: 'var(--accent)', fontWeight: 600 }}>
                             {MUSCLE_GROUPS[m] || m}
                           </span>
@@ -455,8 +428,7 @@ export default function ExercisesManager() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Description */}
+                                    {/* Description */}
                   {isCoach && !ex.isCustom && (pendingImages[ex.id + '_image1'] !== undefined || pendingImages[ex.id + '_image2'] !== undefined) && (
                     <button className="btn-primary" onClick={() => saveClassicImageToDB(ex.id)} disabled={savingImg === ex.id}
                       style={{ width: '100%', padding: 12, marginBottom: 12, fontSize: 14 }}>
