@@ -247,6 +247,12 @@ export default function SessionDetail() {
         ))}
       </div>
 
+      {isCoach && (
+        <button className="btn-ghost" onClick={() => navigate('/create-session?edit=' + id)} style={{ width: '100%', padding: '14px', fontSize: '14px', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          ✏️ Modifier cette séance
+        </button>
+      )}
+
       {/* Sauvegarder poids */}
       <button
         className="btn-primary"

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { useAuth } from '../context/AuthContext'
 import { EXERCISES, EXERCISE_CATEGORIES, SERIES_TYPES, MUSCLE_GROUPS } from '../data/exercises'
@@ -9,6 +9,10 @@ import BodySVG from '../components/BodySVG'
 export default function CreateSession() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const editId = searchParams.get('edit')
+  const preselectedClient = searchParams.get('client')
+  const preselectedName = searchParams.get('name')
   const [clients, setClients] = useState([])
   const [sessionName, setSessionName] = useState('')
   const [clientId, setClientId] = useState('')
@@ -18,7 +22,21 @@ export default function CreateSession() {
   const [filterCategory, setFilterCategory] = useState('Tous')
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => { fetchClients() }, [])
+  useEffect(() => {
+    fetchClients()
+    if (preselectedClient) setClientId(preselectedClient)
+    if (editId) loadExistingSession(editId)
+  }, [])
+
+  async function loadExistingSession(sessionId) {
+    const { data } = await supabase.from('sessions').select('*').eq('id', sessionId).single()
+    if (data) {
+      setSessionName(data.name)
+      setClientId(data.client_id)
+      const exos = JSON.parse(data.exercises || '[]')
+      setExerciseBlocks(exos)
+    }
+  }
 
   async function fetchClients() {
     const { data } = await supabase.from('profiles').select('id, full_name').eq('role', 'client')
@@ -73,7 +91,19 @@ export default function CreateSession() {
 
     const client = clients.find(c => c.id === clientId)
 
-    const { data: session, error } = await supabase.from('sessions').insert({
+    let error
+    if (editId) {
+      const { error: e } = await supabase.from('sessions').update({
+        name: sessionName,
+        client_id: clientId,
+        client_name: client?.full_name,
+        muscles_worked: JSON.stringify(allMuscles),
+        total_sets: totalSets,
+        exercises: JSON.stringify(exerciseBlocks)
+      }).eq('id', editId)
+      error = e
+    } else {
+      const { error: e } = await supabase.from('sessions').insert({
       name: sessionName,
       client_id: clientId,
       client_name: client?.full_name,
@@ -81,7 +111,9 @@ export default function CreateSession() {
       muscles_worked: JSON.stringify(allMuscles),
       total_sets: totalSets,
       exercises: JSON.stringify(exerciseBlocks)
-    }).select().single()
+      }).select().single()
+      error = e
+    }
 
     if (!error) navigate('/dashboard')
     setSaving(false)
@@ -94,7 +126,7 @@ export default function CreateSession() {
         <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer' }}>
           <ArrowLeft size={24} />
         </button>
-        <h1 style={{ fontSize: '36px' }}>NOUVELLE SÉANCE</h1>
+        <h1 style={{ fontSize: '36px' }}>{editId ? 'MODIFIER LA SÉANCE' : 'NOUVELLE SÉANCE'}</h1>
       </div>
 
       {/* Infos séance */}
@@ -216,7 +248,7 @@ export default function CreateSession() {
         disabled={saving || !sessionName || !clientId || exerciseBlocks.length === 0}
         style={{ width: '100%', padding: '16px', fontSize: '16px', opacity: (saving || !sessionName || !clientId || exerciseBlocks.length === 0) ? 0.5 : 1 }}
       >
-        {saving ? 'SAUVEGARDE...' : `SAUVEGARDER LA SÉANCE (${totalSets} séries)`}
+        {saving ? 'SAUVEGARDE...' : `${editId ? 'METTRE À JOUR' : 'SAUVEGARDER'} LA SÉANCE (${totalSets} séries)`}
       </button>
 
       {/* Exercise Picker Modal */}
