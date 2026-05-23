@@ -72,59 +72,47 @@ export default function SessionDetail() {
         setWeights(JSON.parse(weightData[0].weights))
       }
 
-      // Charger poids précédents par exercice (toutes les séances)
-      const exosData = JSON.parse(data.exercises || '[]')
-      const exoIds = exosData.map(b => b.exercise.id)
-
-      // Récupérer toutes les séances qui contiennent ces exercices
-      const { data: allSessions } = await supabase
-        .from('sessions')
-        .select('id, exercises')
+      // Charger poids précédents : toutes les session_weights de ce client
+      const { data: allWeights } = await supabase
+        .from('session_weights')
+        .select('session_id, weights, updated_at')
         .eq('client_id', user.id)
-        .neq('id', id)
+        .neq('session_id', id)
+        .order('updated_at', { ascending: false })
 
-      if (allSessions) {
-        // Trouver les sessions qui ont les mêmes exercices
-        const matchingSessionIds = allSessions
-          .filter(s => {
-            const exos = JSON.parse(s.exercises || '[]')
-            return exos.some(b => exoIds.includes(b.exercise.id))
-          })
-          .map(s => s.id)
+      if (allWeights?.length > 0) {
+        // Récupérer les sessions correspondantes pour avoir les exercices
+        const sessionIds = [...new Set(allWeights.map(w => w.session_id))]
+        const { data: prevSessions } = await supabase
+          .from('sessions')
+          .select('id, exercises')
+          .in('id', sessionIds)
 
-        if (matchingSessionIds.length > 0) {
-          const { data: prevData } = await supabase
-            .from('session_weights')
-            .select('*, sessions!inner(exercises)')
-            .eq('client_id', user.id)
-            .in('session_id', matchingSessionIds)
-            .order('updated_at', { ascending: false })
-            .limit(5)
+        if (prevSessions) {
+          const sessionMap = {}
+          prevSessions.forEach(s => { sessionMap[s.id] = JSON.parse(s.exercises || '[]') })
 
-          if (prevData?.length > 0) {
-            // Construire un map exerciceId -> meilleur poids par série
-            const prevMap = {}
-            prevData.forEach(pw => {
-              const session = allSessions.find(s => s.id === pw.session_id)
-              if (!session) return
-              const sessionExos = JSON.parse(session.exercises || '[]')
-              const pwWeights = JSON.parse(pw.weights || '{}')
-              sessionExos.forEach((block, blockIdx) => {
-                const exoId = block.exercise.id
-                block.sets.forEach((set, setIdx) => {
-                  const key = `${blockIdx}_${setIdx}`
-                  const w = pwWeights[key]
-                  if (w && parseFloat(w) > 0) {
-                    if (!prevMap[exoId]) prevMap[exoId] = {}
-                    if (!prevMap[exoId][setIdx] || parseFloat(w) > parseFloat(prevMap[exoId][setIdx])) {
-                      prevMap[exoId][setIdx] = w
-                    }
+          const prevMap = {}
+          allWeights.forEach(pw => {
+            const exos = sessionMap[pw.session_id]
+            if (!exos) return
+            const pwWeights = JSON.parse(pw.weights || '{}')
+            exos.forEach((block, blockIdx) => {
+              const exoId = block.exercise.id
+              block.sets.forEach((set, setIdx) => {
+                const key = `${blockIdx}_${setIdx}`
+                const w = pwWeights[key]
+                if (w && parseFloat(w) > 0) {
+                  if (!prevMap[exoId]) prevMap[exoId] = {}
+                  // Garder le poids le plus récent (premier trouvé car trié par date desc)
+                  if (prevMap[exoId][setIdx] === undefined) {
+                    prevMap[exoId][setIdx] = w
                   }
-                })
+                }
               })
             })
-            setPrevWeights(prevMap)
-          }
+          })
+          setPrevWeights(prevMap)
         }
       }
     }
