@@ -2,10 +2,26 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { useAuth } from '../context/AuthContext'
-import { ArrowLeft, ChevronDown, ChevronUp, Dumbbell, History } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronUp, Dumbbell, History, Play, Clock } from 'lucide-react'
 import BodySVG from '../components/BodySVG'
 import RestTimer from '../components/RestTimer'
 import { MUSCLE_GROUPS, SERIES_TYPES } from '../data/exercises'
+
+function ElapsedTimer({ startTime }) {
+  const [, forceUpdate] = useState(0)
+  useEffect(() => {
+    const interval = setInterval(() => forceUpdate(n => n + 1), 1000)
+    return () => clearInterval(interval)
+  }, [])
+  const elapsed = Math.floor((Date.now() - startTime) / 1000)
+  const h = Math.floor(elapsed / 3600)
+  const m = Math.floor((elapsed % 3600) / 60)
+  const s = elapsed % 60
+  const str = h > 0
+    ? `${h}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`
+    : `${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`
+  return <span style={{ fontFamily: "Bebas Neue", fontSize: 22, color: "var(--accent)" }}>{str}</span>
+}
 
 export default function SessionDetail() {
   const { id } = useParams()
@@ -19,10 +35,21 @@ export default function SessionDetail() {
   const [expandedBlock, setExpandedBlock] = useState(0)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [started, setStarted] = useState(false)
+  const [startTime, setStartTime] = useState(null)
   const [exerciseImages, setExerciseImages] = useState({}) // { exerciseId: { image1, image2 } }
   const [uploadingImg, setUploadingImg] = useState(null)
 
   useEffect(() => { fetchSession() }, [id])
+
+  useEffect(() => {
+    if (!startTime) return
+    const interval = setInterval(() => {}, 1000)
+    return () => clearInterval(interval)
+  }, [startTime])
+
+  const elapsed = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0
+  const elapsedStr = startTime ? `${Math.floor(elapsed/60).toString().padStart(2,'0')}:${(elapsed%60).toString().padStart(2,'0')}` : '00:00'
 
   async function fetchSession() {
     const { data } = await supabase.from('sessions').select('*').eq('id', id).single()
@@ -147,6 +174,41 @@ export default function SessionDetail() {
 
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--text2)' }}>Chargement...</div>
   if (!session) return null
+
+  if (!started && !isCoach) {
+    const muscles = JSON.parse(session.muscles_worked || '[]')
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', background: 'var(--bg)' }}>
+        <div style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
+          <div style={{ marginBottom: 32 }}>
+            <BodySVG activeMuscles={muscles} size={80} showBoth={true} />
+          </div>
+          <h1 style={{ fontFamily: 'Bebas Neue', fontSize: 42, lineHeight: 1, marginBottom: 8 }}>{session.name}</h1>
+          <p style={{ color: 'var(--text2)', fontSize: 14, marginBottom: 32 }}>
+            {exercises.length} exercice{exercises.length > 1 ? 's' : ''} · {JSON.parse(session.exercises || '[]').reduce((t, b) => t + b.sets.length, 0)} séries
+          </p>
+          {muscles.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginBottom: 40 }}>
+              {muscles.map(m => (
+                <span key={m} style={{ background: 'rgba(230,57,70,0.12)', border: '1px solid rgba(230,57,70,0.3)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: 'var(--accent)', fontWeight: 600 }}>
+                  {MUSCLE_GROUPS[m] || m}
+                </span>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={() => { setStarted(true); setStartTime(Date.now()) }}
+            style={{ width: '100%', padding: '18px', background: 'var(--accent)', border: 'none', borderRadius: 14, color: 'white', fontFamily: 'Bebas Neue', fontSize: 24, letterSpacing: '0.05em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}
+          >
+            <Play size={24} fill="white" /> DÉMARRER LA SÉANCE
+          </button>
+          <button onClick={() => navigate(-1)} style={{ marginTop: 16, background: 'none', border: 'none', color: 'var(--text2)', fontSize: 14, cursor: 'pointer', padding: 8 }}>
+            ← Retour
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   const muscles = JSON.parse(session.muscles_worked || '[]')
   const getSeriesTypeLabel = (type) => SERIES_TYPES.find(t => t.value === type)?.label || type
