@@ -18,6 +18,7 @@ export default function SessionDetail() {
   const [loading, setLoading] = useState(true)
   const [expandedBlock, setExpandedBlock] = useState(0)
   const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [exerciseImages, setExerciseImages] = useState({}) // { exerciseId: { image1, image2 } }
   const [uploadingImg, setUploadingImg] = useState(null)
 
@@ -124,13 +125,20 @@ export default function SessionDetail() {
 
   async function saveWeights() {
     setSaving(true)
-    await supabase.from('session_weights').upsert({
+    setSaved(false)
+    const { error } = await supabase.from('session_weights').upsert({
       session_id: id,
       client_id: user.id,
       weights: JSON.stringify(weights),
       updated_at: new Date().toISOString()
     }, { onConflict: 'session_id,client_id' })
     setSaving(false)
+    if (error) {
+      alert('Erreur lors de la sauvegarde : ' + error.message)
+    } else {
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    }
   }
 
   function updateWeight(key, value) {
@@ -377,10 +385,10 @@ export default function SessionDetail() {
       <button
         className="btn-primary"
         onClick={saveWeights}
-        disabled={saving}
-        style={{ width: '100%', padding: '16px', fontSize: '15px' }}
+        disabled={saving || saved}
+        style={{ width: '100%', padding: '16px', fontSize: '15px', background: saved ? '#06d6a0' : saving ? 'var(--bg3)' : 'var(--accent)', transition: 'all 0.3s' }}
       >
-        {saving ? 'SAUVEGARDE...' : '💾 SAUVEGARDER MES POIDS'}
+        {saving ? '⏳ SAUVEGARDE EN COURS...' : saved ? '✅ POIDS SAUVEGARDÉS !' : '💾 SAUVEGARDER MES POIDS'}
       </button>
     </div>
   )
