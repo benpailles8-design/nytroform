@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { default as bodyHighlighter } from 'body-highlighter'
+import { createBodyHighlighter, ModelType } from 'body-highlighter'
 
-// Mapping des IDs muscles NytroForm vers les IDs body-highlighter
 const MUSCLE_MAP = {
   chest:      ['chest'],
   shoulders:  ['front-deltoids', 'back-deltoids'],
@@ -20,37 +19,54 @@ const MUSCLE_MAP = {
   calves:     ['calves'],
 }
 
-function BodyHighlight({ activeMuscles, side, size }) {
+function BodyView({ activeMuscles, type, size, label }) {
   const ref = useRef(null)
+  const instanceRef = useRef(null)
 
-  useEffect(() => {
-    if (!ref.current) return
-    ref.current.innerHTML = ''
-
+  const getData = () => {
     const muscles = []
+    const seen = new Set()
     activeMuscles.forEach(m => {
       const mapped = MUSCLE_MAP[m] || []
       mapped.forEach(name => {
-        muscles.push({ muscles: [name], color: '#e63946' })
-      })
-    })
-
-    try {
-      bodyHighlighter(ref.current, {
-        data: muscles,
-        side,
-        width: size,
-        height: size * 1.6,
-        style: {
-          highlightedMuscleColor: '#e63946',
+        if (!seen.has(name)) {
+          seen.add(name)
+          muscles.push({ muscles: [name], color: '#e63946' })
         }
       })
-    } catch (e) {
-      console.error('body-highlighter error:', e)
-    }
-  }, [activeMuscles, side, size])
+    })
+    return muscles
+  }
 
-  return <div ref={ref} />
+  useEffect(() => {
+    if (!ref.current) return
+    if (instanceRef.current) {
+      instanceRef.current.update({ data: getData() })
+      return
+    }
+    instanceRef.current = createBodyHighlighter(ref.current, {
+      data: getData(),
+      type,
+      style: { width: size, height: size * 1.6 },
+    })
+    return () => {
+      instanceRef.current?.destroy()
+      instanceRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    if (instanceRef.current) {
+      instanceRef.current.update({ data: getData() })
+    }
+  }, [activeMuscles])
+
+  return (
+    <div style={{ textAlign: 'center' }}>
+      {label && <p style={{ fontSize: '9px', color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>{label}</p>}
+      <div ref={ref} />
+    </div>
+  )
 }
 
 export default function BodySVG({ activeMuscles = [], size = 80, showBoth = false }) {
@@ -62,31 +78,15 @@ export default function BodySVG({ activeMuscles = [], size = 80, showBoth = fals
   if (showBoth || (hasBack && hasFront)) {
     return (
       <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: '9px', color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>Face</p>
-          <BodyHighlight activeMuscles={activeMuscles} side="front" size={size} />
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: '9px', color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>Dos</p>
-          <BodyHighlight activeMuscles={activeMuscles} side="back" size={size} />
-        </div>
+        <BodyView activeMuscles={activeMuscles} type={ModelType.ANTERIOR} size={size} label="Face" />
+        <BodyView activeMuscles={activeMuscles} type={ModelType.POSTERIOR} size={size} label="Dos" />
       </div>
     )
   }
 
   if (hasBack) {
-    return (
-      <div style={{ textAlign: 'center' }}>
-        <p style={{ fontSize: '9px', color: 'var(--text2)', textTransform: 'uppercase', marginBottom: '2px' }}>Dos</p>
-        <BodyHighlight activeMuscles={activeMuscles} side="back" size={size} />
-      </div>
-    )
+    return <BodyView activeMuscles={activeMuscles} type={ModelType.POSTERIOR} size={size} label="Dos" />
   }
 
-  return (
-    <div style={{ textAlign: 'center' }}>
-      <p style={{ fontSize: '9px', color: 'var(--text2)', textTransform: 'uppercase', marginBottom: '2px' }}>Face</p>
-      <BodyHighlight activeMuscles={activeMuscles} side="front" size={size} />
-    </div>
-  )
+  return <BodyView activeMuscles={activeMuscles} type={ModelType.ANTERIOR} size={size} label="Face" />
 }
