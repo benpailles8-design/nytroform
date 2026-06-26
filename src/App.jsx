@@ -15,11 +15,25 @@ import Progression from './pages/Progression'
 import Navbar from './components/Navbar'
 
 function ProtectedRoute({ children, coachOnly = false }) {
-  const { user, loading, isCoach } = useAuth()
+  const { user, loading, isCoach, connError } = useAuth()
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', flexDirection: 'column', gap: '16px' }}>
       <div style={{ fontFamily: 'Bebas Neue', fontSize: '48px', color: 'var(--accent)' }}>NYTROFORM</div>
       <div style={{ color: 'var(--text2)', fontSize: '13px' }}>Chargement...</div>
+    </div>
+  )
+  if (connError) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', flexDirection: 'column', gap: '16px', padding: '24px', textAlign: 'center' }}>
+      <div style={{ fontFamily: 'Bebas Neue', fontSize: '48px', color: 'var(--accent)' }}>NYTROFORM</div>
+      <div style={{ color: 'var(--text2)', fontSize: '14px', maxWidth: '320px' }}>
+        Impossible de se connecter au serveur. Vérifie ta connexion internet, ou réessaie dans quelques instants.
+      </div>
+      <button
+        onClick={() => window.location.reload()}
+        style={{ padding: '12px 24px', background: 'var(--accent)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
+      >
+        Réessayer
+      </button>
     </div>
   )
   if (!user) return <Navigate to="/login" />
